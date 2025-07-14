@@ -1,7 +1,9 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
+import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -18,7 +20,8 @@ public class CourseUser {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
+    @NotBlank
     private String userName;
     @Email
     private String email;
@@ -45,5 +48,39 @@ public class CourseUser {
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private List<Course> paidCourses = new ArrayList<>();
+
+    public static UserDTO mapIntoDTO(CourseUser courseUser) {
+        return UserDTO.builder()
+                .id(courseUser.getId())
+                .email(courseUser.getEmail())
+                .password(courseUser.getEncryptedPassword())
+                .balance(courseUser.getBalance())
+                .userName(courseUser.getUserName())
+                .role(courseUser.getRole())
+                .userProfile(courseUser.getUserProfile())
+                .coursesCreated(courseUser.getCoursesCreated())
+                .paidCourses(courseUser.getPaidCourses()).build();
+    }
+
+    public static CourseUser mapIntoEntity(UserDTO userDTO) {
+        return CourseUser.builder()
+                .id(userDTO.getId())
+                .email(userDTO.getEmail())
+                .encryptedPassword(userDTO.getPassword())
+                .balance(userDTO.getBalance())
+                .userName(userDTO.getUserName())
+                .role(userDTO.getRole())
+                .userProfile(userDTO.getUserProfile())
+                .coursesCreated(userDTO.getCoursesCreated())
+                .paidCourses(userDTO.getPaidCourses()).build();
+    }
+
+    public void enrollCourse(Course course) {
+        paidCourses.add(course);
+    }
+
+    public void createCourse(Course course) {
+        coursesCreated.add(course);
+    }
 
 }

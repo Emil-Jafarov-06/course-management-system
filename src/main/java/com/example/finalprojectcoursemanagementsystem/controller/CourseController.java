@@ -1,7 +1,4 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
-
-import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
-import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

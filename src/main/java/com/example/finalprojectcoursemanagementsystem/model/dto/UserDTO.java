@@ -2,6 +2,7 @@ package com.example.finalprojectcoursemanagementsystem.model.dto;
 
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.UserProfile;
+import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -30,7 +31,7 @@ public class UserDTO {
 
     @Min(0)
     private Double balance;
-    private String role;
+    private RoleEnum role;
     @JsonIgnore
     private UserProfile userProfile;
     @JsonIgnore

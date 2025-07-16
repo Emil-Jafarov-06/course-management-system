@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Lesson {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn
+    @JsonManagedReference
     private Course course;
 
     @OneToOne(mappedBy = "lesson")

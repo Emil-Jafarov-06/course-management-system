@@ -6,6 +6,7 @@ import com.example.finalprojectcoursemanagementsystem.model.request.UserCreateRe
 import com.example.finalprojectcoursemanagementsystem.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public class UserController {
 
     private final UserService userService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/id/{id}")
     public ResponseEntity<UserDTO> getUserInfo(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
@@ -24,7 +26,7 @@ public class UserController {
 
     @GetMapping("/name/{name}")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable String name) {
-        return ResponseEntity.ok(userService.getUserByUserName(name));
+        return ResponseEntity.ok(userService.getUserDTOByUserName(name));
     }
 
     @GetMapping("/email/{email}")
@@ -65,12 +67,5 @@ public class UserController {
     public ResponseEntity<UserDTO> deleteMyAccount(@RequestBody UserDTO userDTO) {
 
     }
-
-    @PostMapping("/register")
-    public ResponseEntity<UserDTO> registerUser(@RequestBody UserCreateRequest user) {
-        return  ResponseEntity.ok(userService.registerUser(user));
-    }
-
-
 
 }

@@ -1,6 +1,5 @@
 package com.example.finalprojectcoursemanagementsystem.model.request;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -17,6 +16,7 @@ public class UserCreateRequest {
     private String userName;
     @Email
     private String email;
+    @NotBlank
     private String password;
 
 }

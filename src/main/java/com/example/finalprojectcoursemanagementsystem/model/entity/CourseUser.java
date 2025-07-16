@@ -1,5 +1,8 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
+import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -31,7 +34,7 @@ public class CourseUser {
     @Min(0)
     private Double balance;
 
-    private String role;
+    private RoleEnum role;
 
     @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.EAGER, orphanRemoval = true)
     @JoinColumn
@@ -47,6 +50,7 @@ public class CourseUser {
             joinColumns = @JoinColumn(name = "users_id"),
             inverseJoinColumns = @JoinColumn(name = "course_id")
     )
+    @JsonManagedReference
     private List<Course> paidCourses = new ArrayList<>();
 
     public static UserDTO mapIntoDTO(CourseUser courseUser) {

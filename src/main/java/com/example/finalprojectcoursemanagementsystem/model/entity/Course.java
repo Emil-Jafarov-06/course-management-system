@@ -1,5 +1,7 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,9 +29,11 @@ public class Course {
     private CourseUser courseOwner;
 
     @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.DETACH, orphanRemoval = true)
+    @JsonBackReference
     private List<Lesson> lessons = new ArrayList<>();
 
     @ManyToMany(mappedBy = "paidCourses", fetch = FetchType.LAZY)
+    @JsonBackReference
     private List<CourseUser> enrolledUsers = new ArrayList<>();
 
 }

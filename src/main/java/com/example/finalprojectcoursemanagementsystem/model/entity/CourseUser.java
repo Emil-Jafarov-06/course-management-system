@@ -36,15 +36,16 @@ public class CourseUser {
 
     private RoleEnum role;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.EAGER, orphanRemoval = true)
+    @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.LAZY, orphanRemoval = true)
     @JoinColumn
     private UserProfile userProfile;
 
     // Only available for teachers
     @OneToMany(mappedBy = "courseOwner", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Course> coursesCreated = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "user_course_enrollment",
             joinColumns = @JoinColumn(name = "users_id"),
@@ -60,10 +61,7 @@ public class CourseUser {
                 .password(courseUser.getEncryptedPassword())
                 .balance(courseUser.getBalance())
                 .userName(courseUser.getUserName())
-                .role(courseUser.getRole())
-                .userProfile(courseUser.getUserProfile())
-                .coursesCreated(courseUser.getCoursesCreated())
-                .paidCourses(courseUser.getPaidCourses()).build();
+                .role(courseUser.getRole()).build();
     }
 
     public static CourseUser mapIntoEntity(UserDTO userDTO) {
@@ -73,10 +71,7 @@ public class CourseUser {
                 .encryptedPassword(userDTO.getPassword())
                 .balance(userDTO.getBalance())
                 .userName(userDTO.getUserName())
-                .role(userDTO.getRole())
-                .userProfile(userDTO.getUserProfile())
-                .coursesCreated(userDTO.getCoursesCreated())
-                .paidCourses(userDTO.getPaidCourses()).build();
+                .role(userDTO.getRole()).build();
     }
 
     public void enrollCourse(Course course) {
@@ -85,6 +80,7 @@ public class CourseUser {
 
     public void createCourse(Course course) {
         coursesCreated.add(course);
+        course.setCourseOwner(this);
     }
 
 }

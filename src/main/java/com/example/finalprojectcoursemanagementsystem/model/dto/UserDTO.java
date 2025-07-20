@@ -32,11 +32,5 @@ public class UserDTO {
     @Min(0)
     private Double balance;
     private RoleEnum role;
-    @JsonIgnore
-    private UserProfile userProfile;
-    @JsonIgnore
-    private List<Course> coursesCreated = new ArrayList<>();
-    @JsonIgnore
-    private List<Course> paidCourses = new ArrayList<>();
 
 }

@@ -8,7 +8,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class CourseCreateRequest {
+public class CourseUpdateRequest {
 
     private String courseName;
     private String courseDescription;

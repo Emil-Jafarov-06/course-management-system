@@ -1,16 +1,29 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.exception.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
+import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
+import com.example.finalprojectcoursemanagementsystem.model.request.AccountDeleteRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.UsernamePasswordUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
+import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
     public UserDTO getUserById(Long id) {
@@ -37,4 +50,70 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    public List<CourseDTO> getPurchasedCourses(Long userId) {
+        List<Course> courses = userRepository.findPurchasedCoursesById(userId);
+        return courses.stream()
+                .map(Course::mapIntoDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public Double increaseBalance(Long userId, @Positive Double amount) {
+        CourseUser user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        Double updatedAmount = user.getBalance() + amount;
+        user.setBalance(updatedAmount);
+        userRepository.save(user);
+        return updatedAmount;
+    }
+
+    @Transactional
+    public Double decreaseBalance(Long userId, @Positive Double amount) {
+        CourseUser user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        if(user.getBalance() >= amount) {
+            Double updatedAmount = user.getBalance() - amount;
+            user.setBalance(updatedAmount);
+            userRepository.save(user);
+            return updatedAmount;
+        }
+        throw new InsufficientBalanceException("Insufficient balance!");
+    }
+
+    @Transactional
+    public UserDTO changeEmail(Long userId, String email) {
+        CourseUser user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        user.setEmail(email);
+        userRepository.save(user);
+        return CourseUser.mapIntoDTO(user);
+    }
+
+    @Transactional
+    public UserDTO updateUsernamePassword(SecurityUser securityUser, UsernamePasswordUpdateRequest request) {
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        if(!user.getUserName().equals(request.getOldUsername())){
+            throw new RuntimeException("Cannot update another account!");
+        }
+        if(securityUser.getUsername().equals(request.getOldPassword()) &&
+                passwordEncoder.matches(request.getNewPassword(), securityUser.getPassword())) {
+            user.setUserName(request.getNewUsername());
+            user.setEncryptedPassword(passwordEncoder.encode(request.getNewPassword()));
+            CourseUser updatedUser = userRepository.save(user);
+            return CourseUser.mapIntoDTO(updatedUser);
+        } else{
+            throw new RuntimeException("Username or password is not correct!");
+        }
+    }
+
+    @Transactional
+    public void deleteAccount(SecurityUser securityUser, AccountDeleteRequest request) {
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        if(!user.getUserName().equals(request.getUsername())){
+            throw new RuntimeException("Cannot delete another account!");
+        }
+        if(securityUser.getUsername().equals(request.getUsername()) &&
+                passwordEncoder.matches(request.getPassword(), securityUser.getPassword())) {
+            userRepository.deleteById(securityUser.getCourseUser().getId());
+        } else{
+            throw new RuntimeException("Username or password is not correct!");
+        }
+    }
 }

@@ -19,7 +19,7 @@ public class AuthService {
     private final UserDetailsService userDetailsService;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
     public AuthResponse register(RegisterRequest authRequest) {
         CourseUser user = new CourseUser();

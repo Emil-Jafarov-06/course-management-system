@@ -1,31 +1,60 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
+import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
+import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
+import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
+import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
+import com.example.finalprojectcoursemanagementsystem.service.CourseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/course")
+@RequestMapping("/courses")
 public class CourseController {
 
-    @GetMapping("/id/{id}")
-    public ResponseEntity<CourseDTO> getCourse(@PathVariable Long id){
+    private final CourseService courseService;
 
+    @GetMapping("/id/{id}")
+    public ResponseEntity<CourseDTO> getCourseInfo(@PathVariable Long id){
+        return ResponseEntity.ok(courseService.getCourseById(id));
     }
 
     @GetMapping("/name/{name}")
-    public ResponseEntity<CourseDTO> getCourseByName(@PathVariable String name){
-
+    public ResponseEntity<CourseDTO> getCourseInfo(@PathVariable String name){
+        return ResponseEntity.ok(courseService.getCourseByName(name));
     }
 
     @GetMapping("/search/{nameLike}")
-    public ResponseEntity<CourseDTO> getCourseByNameLike(@PathVariable(name = "nameLike") String name){
-
+    public ResponseEntity<List<CourseDTO>> getCourseByNameLike(@PathVariable(name = "nameLike") String name){
+        return ResponseEntity.ok(courseService.searchForCourses(name));
     }
 
+    @GetMapping("/teacher/{id}")
+    public ResponseEntity<List<CourseDTO>> getCourseByTeacherId(@PathVariable Long id){
+        return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
+    }
+
+    @GetMapping
+
+    @PreAuthorize("hasRole('TEACHER')")
     @PostMapping("/createCourse")
-    public ResponseEntity<CourseDTO> createCourse(@PathVariable(name = "nameLike") String name){
-
+    public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseCreateRequest courseCreateRequest){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.createCourse(securityUser.getCourseUser().getId(), courseCreateRequest));
     }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PutMapping("/updateCourse/{id}")
+    public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseUpdateRequest courseUpdateRequest){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.updateCourse(securityUser.getCourseUser().getId(), id, courseUpdateRequest));
+    }
+
 
 }

@@ -34,13 +34,19 @@ public class CourseController {
     }
 
     @GetMapping("/search/{nameLike}")
-    public ResponseEntity<List<CourseDTO>> getCourseByNameLike(@PathVariable(name = "nameLike") @NotBlank String name){
+    public ResponseEntity<List<CourseDTO>> getCoursesByNameLike(@PathVariable(name = "nameLike") @NotBlank String name){
         return ResponseEntity.ok(courseService.searchForCourses(name));
     }
 
     @GetMapping("/teacher/{id}")
-    public ResponseEntity<List<CourseDTO>> getCourseByTeacherId(@PathVariable @Positive Long id){
+    public ResponseEntity<List<CourseDTO>> getCoursesByTeacherId(@PathVariable @Positive Long id){
         return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
+    }
+
+    @GetMapping("/{courseId}/continue")
+    public ResponseEntity<CourseDTO> continueCourse(@PathVariable @Positive Long courseId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
     }
 
     @PreAuthorize("hasRole('TEACHER')")

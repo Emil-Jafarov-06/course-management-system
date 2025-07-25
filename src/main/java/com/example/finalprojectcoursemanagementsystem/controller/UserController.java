@@ -55,6 +55,8 @@ public class UserController {
         return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId()));
     }
 
+    @GetMapping("/purchas{id}")
+
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/createdCourses")
     public ResponseEntity<List<CourseDTO>> getCreatedCourses() {

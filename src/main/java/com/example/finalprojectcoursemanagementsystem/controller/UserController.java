@@ -7,7 +7,9 @@ import com.example.finalprojectcoursemanagementsystem.model.request.UsernamePass
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.CourseService;
 import com.example.finalprojectcoursemanagementsystem.service.UserService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -27,17 +29,17 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/id/{id}")
-    public ResponseEntity<UserDTO> getUserInfo(@PathVariable Long id) {
+    public ResponseEntity<UserDTO> getUserInfo(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
     @GetMapping("/name/{name}")
-    public ResponseEntity<UserDTO> getUserByName(@PathVariable String name) {
+    public ResponseEntity<UserDTO> getUserByName(@PathVariable @NotBlank String name) {
         return ResponseEntity.ok(userService.getUserDTOByUserName(name));
     }
 
     @GetMapping("/email/{email}")
-    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable String email) {
+    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable @Email String email) {
         return ResponseEntity.ok(userService.getUserByUserEmail(email));
     }
 
@@ -60,6 +62,13 @@ public class UserController {
         return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId()));
     }
 
+    @PostMapping("register/{courseId}")
+    public ResponseEntity<String> registerForCourse(@PathVariable @Positive Long courseId) {
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        courseService.enrollForCourse(securityUser, courseId);
+        return ResponseEntity.ok("Enrolled for course " + courseId);
+    }
+
     @PutMapping("/balance/increase/{amount}")
     public ResponseEntity<String> increaseBalance(@PathVariable @Positive Double amount) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -72,13 +81,6 @@ public class UserController {
         return ResponseEntity.ok("Current balance: " + userService.decreaseBalance(securityUser, amount));
     }
 
-    @PostMapping("register/{courseId}")
-    public ResponseEntity<String> registerForCourse(@PathVariable Long courseId) {
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        courseService.enrollForCourse(securityUser, courseId);
-        return ResponseEntity.ok("Enrolled for course " + courseId);
-    }
-
     @PutMapping("/myAccount/email")
     public ResponseEntity<UserDTO> updateEmail(@RequestBody @Email String email) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -86,13 +88,13 @@ public class UserController {
     }
 
     @PutMapping("/myAccount/unp")
-    public ResponseEntity<UserDTO> updateUsernamePassword(@RequestBody UsernamePasswordUpdateRequest request) {
+    public ResponseEntity<UserDTO> updateUsernamePassword(@RequestBody @Valid UsernamePasswordUpdateRequest request) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(userService.updateUsernamePassword(securityUser, request));
     }
 
     @DeleteMapping("/myAccount")
-    public ResponseEntity<String> deleteMyAccount(@RequestBody AccountDeleteRequest request) {
+    public ResponseEntity<String> deleteMyAccount(@RequestBody @Valid AccountDeleteRequest request) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteAccount(securityUser, request);
         return ResponseEntity.ok("Account deleted!");

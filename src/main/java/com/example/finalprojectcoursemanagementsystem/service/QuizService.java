@@ -22,7 +22,6 @@ public class QuizService {
 
     private final QuizRepository quizRepository;
     private final UserRepository userRepository;
-    private final CourseRepository courseRepository;
     private final LessonRepository lessonRepository;
     private final QuestionRepository questionRepository;
 
@@ -45,6 +44,7 @@ public class QuizService {
         return quizDTO;
     }
 
+    @Transactional
     public String checkQuiz(Long userId, Long quizId, QuizSubmitRequest request) {
 
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
@@ -83,7 +83,7 @@ public class QuizService {
         return Quiz.mapIntoDTO(savedQuiz);
     }
 
-
+    @Transactional
     public QuestionDTO addQuestionToQuiz(Long userId, Long quizId, QuestionCreateRequest request) {
 
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
@@ -105,5 +105,17 @@ public class QuizService {
         quizRepository.save(quiz);
         return Question.mapIntoDTO(questionRepository.save(question));
 
+    }
+
+    @Transactional
+    public String deleteQuestionFromQuiz(Long id, Long questionId) {
+        Question question = questionRepository.findById(questionId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = question.getQuiz();
+        if(!quiz.getLesson().getCourse().getCourseOwner().getId().equals(id)) {
+            throw new RuntimeException("Only owner teachers modify quizzes!");
+        }
+        quiz.getQuestions().remove(question);
+        questionRepository.delete(question);
+        return String.format("Question with id %d deleted successfully!", questionId);
     }
 }

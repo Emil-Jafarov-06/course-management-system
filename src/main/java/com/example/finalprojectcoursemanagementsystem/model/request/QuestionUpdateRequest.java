@@ -10,10 +10,10 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class QuestionCreateRequest {
+public class QuestionUpdateRequest {
 
     @NotBlank
-    String questionText;
+    private String questionText;
     @Pattern(regexp = "^[A-D]$")
     private String correctVariant;
     @NotBlank

@@ -5,6 +5,7 @@ import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Lesson;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonCreateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.LessonUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.CourseRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.LessonRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
@@ -52,4 +53,18 @@ public class LessonService {
         }
     }
 
+    @Transactional
+    public LessonDTO updateLesson(Long id, Long lessonId, LessonUpdateRequest request) {
+
+        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
+        if(lesson.getCourse().getCourseOwner().getId().equals(id)){
+            lesson.setLessonName(request.getLessonName());
+            lesson.setLessonText(request.getLessonText());
+            lesson.setLessonDescription(request.getLessonDescription());
+            lesson.setVideoURL(request.getVideoURL());
+            return Lesson.mapIntoDTO(lessonRepository.save(lesson));
+        }
+        throw new RuntimeException("Only the owner teacher can update lesson!");
+
+    }
 }

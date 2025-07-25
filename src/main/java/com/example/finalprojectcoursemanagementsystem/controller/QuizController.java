@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/quiz")
+@RequestMapping("/quizzes")
 public class QuizController {
 
     private final QuizService quizService;
@@ -34,13 +34,13 @@ public class QuizController {
 
         return ResponseEntity.ok(quizService.createQuiz(securityUser.getCourseUser().getId(), request));
     }
-//
-//    @PostMapping("/{id}")
-//    public ResponseEntity<String> submitQuiz(@PathVariable("id") Long quizId, @RequestBody QuizSubmitRequest request){
-//        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//
-//        return ResponseEntity.ok(quizService.checkQuiz(securityUser.getCourseUser().getId(), quizId, request));
-//    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<String> submitQuiz(@PathVariable("id") Long quizId, @RequestBody QuizSubmitRequest request){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        return ResponseEntity.ok(quizService.checkQuiz(securityUser.getCourseUser().getId(), quizId, request));
+    }
 
     @PostMapping("/{id}/question")
     public ResponseEntity<QuestionDTO> addQuestionToQuiz(@PathVariable("id") Long quizId, @RequestBody QuestionCreateRequest request){

@@ -28,7 +28,6 @@ public class LessonService {
         if(!course.getCourseOwner().getId().equals(id)){
             throw new RuntimeException("Only the owner teacher can add lesson!");
         }
-        CourseUser courseUser = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         Lesson lesson = new Lesson();
         lesson.setLessonName(request.getLessonName());
         lesson.setLessonText(request.getLessonText());
@@ -37,20 +36,20 @@ public class LessonService {
 
         course.addLesson(lesson);
         courseRepository.save(course);
-        lessonRepository.save(lesson);
+        Lesson savedLesson = lessonRepository.save(lesson);
 
-        return Lesson.mapIntoDTO(lesson);
+        return Lesson.mapIntoDTO(savedLesson);
     }
 
     @Transactional
     public LessonDTO getLesson(Long userId, Long lessonId) {
         Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
         Course course = lesson.getCourse();
-        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
-        if(course.getEnrolledUsers().contains(courseUser) || course.getCourseOwner().getId().equals(userId)){
+        if(userRepository.isCourseAlreadyPurchased(userId, course.getId()) || course.getCourseOwner().getId().equals(userId)){
             return Lesson.mapIntoDTO(lesson);
         } else {
             throw new RuntimeException("Only the owner teacher and enrolled users can view lesson!");
         }
     }
+
 }

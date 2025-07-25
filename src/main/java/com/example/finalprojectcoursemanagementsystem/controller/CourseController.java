@@ -40,16 +40,15 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
     }
 
-
     @PreAuthorize("hasRole('TEACHER')")
-    @PostMapping("/createCourse")
+    @PostMapping("/course")
     public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseCreateRequest courseCreateRequest){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(courseService.createCourse(securityUser, courseCreateRequest));
     }
 
     @PreAuthorize("hasRole('TEACHER')")
-    @PutMapping("/updateCourse/{id}")
+    @PutMapping("/course/{id}")
     public ResponseEntity<CourseDTO> updateCourse(@PathVariable Long id, @RequestBody CourseUpdateRequest courseUpdateRequest){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(courseService.updateCourse(securityUser.getCourseUser().getId(), id, courseUpdateRequest));

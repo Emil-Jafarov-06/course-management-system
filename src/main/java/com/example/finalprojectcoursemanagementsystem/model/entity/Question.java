@@ -19,7 +19,7 @@ public class Question {
 
     String questionText;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn
     private Quiz quiz;
 

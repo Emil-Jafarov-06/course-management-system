@@ -24,7 +24,7 @@ public class Quiz {
 
     private Integer duration;
 
-    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
     @JoinColumn
     private Lesson lesson;
 

@@ -2,7 +2,9 @@ package com.example.finalprojectcoursemanagementsystem.model.request;
 
 import lombok.*;
 
+import javax.swing.plaf.synth.SynthTabbedPaneUI;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -12,6 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class QuizSubmitRequest {
 
-    private List<String> answers;
+    private Map<Long, String> answers;
 
 }

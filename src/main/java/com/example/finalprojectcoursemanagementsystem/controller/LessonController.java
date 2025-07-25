@@ -1,8 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
-import com.example.finalprojectcoursemanagementsystem.model.entity.Quiz;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.LessonService;

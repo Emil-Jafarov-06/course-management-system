@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,11 +30,10 @@ public class QuizService {
     public QuizDTO getQuiz(Long userId, Long quizId) {
 
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
-        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
         Course course = quiz.getLesson().getCourse();
 
-        if(!course.getEnrolledUsers().contains(courseUser)) {
-            throw new RuntimeException("Only enrolled users can take take quizzes!");
+        if(!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
+            throw new RuntimeException("Only enrolled users can take quizzes!");
         }
 
         QuizDTO quizDTO = Quiz.mapIntoDTO(quiz);
@@ -44,29 +44,41 @@ public class QuizService {
 
         return quizDTO;
     }
-//
-//    public String checkQuiz(Long id, Long quizId, QuizSubmitRequest request) {
-//
-//
-//
-//    }
+
+    public String checkQuiz(Long userId, Long quizId, QuizSubmitRequest request) {
+
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Course course = quiz.getLesson().getCourse();
+
+        if(!course.getCourseOwner().getId().equals(userId)) {
+            throw new RuntimeException("Only enrolled users can submit quizzes!");
+        }
+        int accurateResponses = 0;
+        Map<Long, String> userResponses = request.getAnswers();
+        for(Question question : quiz.getQuestions()) {
+            if(userResponses.get(question.getId()).equals(question.getCorrectVariant())) {
+                accurateResponses++;
+            }
+        }
+
+        return String.format("Your score is %d out of %d", accurateResponses, quiz.getQuestions().size());
+
+    }
 
     @Transactional
     public QuizDTO createQuiz(Long userId, QuizCreateRequest request) {
 
-        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
         Lesson lesson = lessonRepository.findById(request.getLessonId())
                 .orElseThrow(EntityNotFoundException::new);
         Course course = lesson.getCourse();
-        if(!courseUser.getCoursesCreated().contains(course)) {
+        if(!course.getCourseOwner().getId().equals(userId)) {
             throw new RuntimeException("Only owner teachers can create quizzes!");
         }
         Quiz quiz = Quiz.builder()
                 .duration(request.getDuration())
                 .quizDescription(request.getQuizDescription())
                 .lesson(lesson).build();
-
-        lessonRepository.save(lesson);
+        lesson.setQuiz(quiz);
         Quiz savedQuiz = quizRepository.save(quiz);
         return Quiz.mapIntoDTO(savedQuiz);
     }
@@ -74,10 +86,9 @@ public class QuizService {
 
     public QuestionDTO addQuestionToQuiz(Long userId, Long quizId, QuestionCreateRequest request) {
 
-        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
         Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
         Course course = quiz.getLesson().getCourse();
-        if(!courseUser.getCoursesCreated().contains(course)) {
+        if(!course.getCourseOwner().getId().equals(userId)) {
             throw new RuntimeException("Only owner teachers modify quizzes!");
         }
         Question question = Question.builder()
@@ -90,7 +101,9 @@ public class QuizService {
                 .variantD(request.getVariantD()).build();
 
         quiz.getQuestions().add(question);
-        Quiz savedQuiz = quizRepository.save(quiz);
-        return Question.mapIntoDTO(question);
+        question.setQuiz(quiz);
+        quizRepository.save(quiz);
+        return Question.mapIntoDTO(questionRepository.save(question));
+
     }
 }

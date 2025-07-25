@@ -25,8 +25,6 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
-    private final EntityManager entityManager;
 
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Course not found with id " + id));
@@ -47,13 +45,13 @@ public class CourseService {
 
     @Transactional
     public CourseDTO createCourse(SecurityUser securityUser, CourseCreateRequest courseCreateRequest) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         Course course = new Course();
         course.setCourseName(courseCreateRequest.getCourseName());
         course.setCourseDescription(courseCreateRequest.getCourseDescription());
         course.setCoursePay(courseCreateRequest.getCoursePay());
         user.createCourse(course);
-        entityManager.flush();
+        userRepository.save(user);
 
         return Course.mapIntoDTO(course);
     }
@@ -61,7 +59,7 @@ public class CourseService {
     @Transactional
     public void enrollForCourse(SecurityUser securityUser, Long courseId) {
 
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         Course course = courseRepository.findById(courseId).orElseThrow();
 
         if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
@@ -79,7 +77,7 @@ public class CourseService {
         owner.setBalance(owner.getBalance() + course.getCoursePay());
 
         course.addLearner(user);
-        userRepository.save(user);
+        userRepository.saveAll(List.of(user, owner));
 
     }
 
@@ -89,7 +87,7 @@ public class CourseService {
         CourseUser user = userRepository.findById(userId).orElseThrow();
         Course course = courseRepository.findById(courseId).orElseThrow();
 
-        if(!user.getRole().equals(RoleEnum.TEACHER) || course.getCourseOwner().getId().equals(user.getId())){
+        if(!course.getCourseOwner().getId().equals(user.getId())){
             throw new RuntimeException("Only the owner teacher can update courses!");
         }
 

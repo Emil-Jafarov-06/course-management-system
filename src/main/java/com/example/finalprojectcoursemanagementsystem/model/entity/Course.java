@@ -27,7 +27,7 @@ public class Course {
     private String courseDescription;
     private Double coursePay;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "course_owner_id")
     @JsonManagedReference
     private CourseUser courseOwner;

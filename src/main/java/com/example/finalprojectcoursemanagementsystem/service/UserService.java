@@ -25,7 +25,6 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-    private final EntityManager entityManager;
 
     public UserDTO getUserById(Long id) {
         CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
@@ -67,14 +66,7 @@ public class UserService {
 
     @Transactional
     public Double increaseBalance(SecurityUser securityUser, Double amount) {
-        long startTime = System.nanoTime();
-//        CourseUser user = entityManager.merge(securityUser.getCourseUser());
-//        Double updatedAmount = user.getBalance() + amount;
-//        user.setBalance(updatedAmount);
-//        userRepository.save(user);
-        long endTime = System.nanoTime();
-        System.out.println("Time taken to increase balance: " + (endTime - startTime) / 1000000 + " ms");
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow();
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         Double updatedAmount = user.getBalance() + amount;
         user.setBalance(updatedAmount);
         userRepository.save(user);
@@ -83,7 +75,7 @@ public class UserService {
 
     @Transactional
     public Double decreaseBalance(SecurityUser securityUser, Double amount) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         if(user.getBalance() >= amount) {
             Double updatedAmount = user.getBalance() - amount;
             user.setBalance(updatedAmount);
@@ -95,7 +87,7 @@ public class UserService {
 
     @Transactional
     public UserDTO changeEmail(SecurityUser securityUser, String newEmail) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         if(user.getEmail().equals(newEmail)){
             throw new RuntimeException("Different email address must be provided!");
         }
@@ -106,11 +98,11 @@ public class UserService {
 
     @Transactional
     public UserDTO updateUsernamePassword(SecurityUser securityUser, UsernamePasswordUpdateRequest request) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         if(!user.getUserName().equals(request.getOldUsername())){
             throw new RuntimeException("Cannot update another account!");
         }
-        if(passwordEncoder.matches(request.getOldPassword(), securityUser.getPassword())) {
+        if(passwordEncoder.matches(request.getOldPassword(), user.getEncryptedPassword())) {
             user.setUserName(request.getNewUsername());
             user.setEncryptedPassword(passwordEncoder.encode(request.getNewPassword()));
             CourseUser updatedUser = userRepository.save(user);
@@ -122,12 +114,11 @@ public class UserService {
 
     @Transactional
     public void deleteAccount(SecurityUser securityUser, AccountDeleteRequest request) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         if(!user.getUserName().equals(request.getUsername())){
             throw new RuntimeException("Cannot delete another account!");
         }
-        if(securityUser.getUsername().equals(request.getUsername()) &&
-                passwordEncoder.matches(request.getPassword(), securityUser.getPassword())) {
+        if(passwordEncoder.matches(request.getPassword(), securityUser.getPassword())) {
             userRepository.deleteById(user.getId());
         } else{
             throw new RuntimeException("Username or password is not correct!");

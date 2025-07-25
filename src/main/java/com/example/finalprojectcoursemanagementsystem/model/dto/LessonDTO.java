@@ -10,6 +10,10 @@ import lombok.*;
 @AllArgsConstructor
 public class LessonDTO {
 
-
+    private Long id;
+    private String lessonName;
+    private String lessonDescription;
+    private String videoURL;
+    private String lessonText;
 
 }

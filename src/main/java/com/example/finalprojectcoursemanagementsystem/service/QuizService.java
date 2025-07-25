@@ -1,0 +1,96 @@
+package com.example.finalprojectcoursemanagementsystem.service;
+
+import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
+import com.example.finalprojectcoursemanagementsystem.model.entity.*;
+import com.example.finalprojectcoursemanagementsystem.model.request.QuestionCreateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
+import com.example.finalprojectcoursemanagementsystem.repository.*;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class QuizService {
+
+    private final QuizRepository quizRepository;
+    private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
+    private final LessonRepository lessonRepository;
+    private final QuestionRepository questionRepository;
+
+    @Transactional
+    public QuizDTO getQuiz(Long userId, Long quizId) {
+
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+        Course course = quiz.getLesson().getCourse();
+
+        if(!course.getEnrolledUsers().contains(courseUser)) {
+            throw new RuntimeException("Only enrolled users can take take quizzes!");
+        }
+
+        QuizDTO quizDTO = Quiz.mapIntoDTO(quiz);
+        List<Question> questions = questionRepository.getQuestionsByQuiz_Id(quizId);
+        quizDTO.setQuestions(questions.stream()
+                .map(Question::mapIntoDTO)
+                .collect(Collectors.toList()));
+
+        return quizDTO;
+    }
+//
+//    public String checkQuiz(Long id, Long quizId, QuizSubmitRequest request) {
+//
+//
+//
+//    }
+
+    @Transactional
+    public QuizDTO createQuiz(Long userId, QuizCreateRequest request) {
+
+        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+        Lesson lesson = lessonRepository.findById(request.getLessonId())
+                .orElseThrow(EntityNotFoundException::new);
+        Course course = lesson.getCourse();
+        if(!courseUser.getCoursesCreated().contains(course)) {
+            throw new RuntimeException("Only owner teachers can create quizzes!");
+        }
+        Quiz quiz = Quiz.builder()
+                .duration(request.getDuration())
+                .quizDescription(request.getQuizDescription())
+                .lesson(lesson).build();
+
+        lessonRepository.save(lesson);
+        Quiz savedQuiz = quizRepository.save(quiz);
+        return Quiz.mapIntoDTO(savedQuiz);
+    }
+
+
+    public QuestionDTO addQuestionToQuiz(Long userId, Long quizId, QuestionCreateRequest request) {
+
+        CourseUser courseUser = userRepository.findById(userId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Course course = quiz.getLesson().getCourse();
+        if(!courseUser.getCoursesCreated().contains(course)) {
+            throw new RuntimeException("Only owner teachers modify quizzes!");
+        }
+        Question question = Question.builder()
+                .questionText(request.getQuestionText())
+                .quiz(quiz)
+                .correctVariant(request.getCorrectVariant())
+                .variantA(request.getVariantA())
+                .variantB(request.getVariantB())
+                .variantC(request.getVariantC())
+                .variantD(request.getVariantD()).build();
+
+        quiz.getQuestions().add(question);
+        Quiz savedQuiz = quizRepository.save(quiz);
+        return Question.mapIntoDTO(question);
+    }
+}

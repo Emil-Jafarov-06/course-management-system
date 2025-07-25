@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
+import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,5 +29,14 @@ public class Lesson {
 
     @OneToOne(mappedBy = "lesson")
     private Quiz quiz;
+
+    public static LessonDTO mapIntoDTO(Lesson lesson){
+        return LessonDTO.builder()
+                .id(lesson.getId())
+                .lessonName(lesson.getLessonName())
+                .lessonDescription(lesson.getLessonDescription())
+                .lessonText(lesson.getLessonText())
+                .videoURL(lesson.getVideoURL()).build();
+    }
 
 }

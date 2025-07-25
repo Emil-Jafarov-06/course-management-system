@@ -8,6 +8,8 @@ import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreate
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.CourseRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
+import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final EntityManager entityManager;
 
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Course not found with id " + id));
@@ -43,41 +46,40 @@ public class CourseService {
     }
 
     @Transactional
-    public CourseDTO createCourse(Long id, CourseCreateRequest courseCreateRequest) {
-        CourseUser user = userRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("User not found with id " + id));
-        if(!user.getRole().equals(RoleEnum.TEACHER)){
-            throw new RuntimeException("Only teachers can create courses!");
-        }
-
+    public CourseDTO createCourse(SecurityUser securityUser, CourseCreateRequest courseCreateRequest) {
+        CourseUser user = entityManager.merge(securityUser.getCourseUser());
         Course course = new Course();
         course.setCourseName(courseCreateRequest.getCourseName());
         course.setCourseDescription(courseCreateRequest.getCourseDescription());
         course.setCoursePay(courseCreateRequest.getCoursePay());
-        course.setCourseOwner(user);
-
         user.createCourse(course);
-        courseRepository.save(course);
+        entityManager.flush();
 
         return Course.mapIntoDTO(course);
     }
 
     @Transactional
-    public void enrollForCourse(Long courseUser, Long courseId) {
+    public void enrollForCourse(SecurityUser securityUser, Long courseId) {
 
-        CourseUser user = userRepository.findById(courseUser).orElseThrow();
+        CourseUser user = entityManager.merge(securityUser.getCourseUser());
         Course course = courseRepository.findById(courseId).orElseThrow();
 
-        if(userRepository.findPurchasedCoursesById(courseId).contains(course)){
+        if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
             throw new RuntimeException("Already enrolled for this course!");
         }
+        if(user.equals(course.getCourseOwner())){
+            throw new RuntimeException("You are the owner of this course!");
+        }
+        if(user.getBalance() < course.getCoursePay()){
+            throw new RuntimeException("Insufficient balance!");
+        }
 
-        userService.decreaseBalance(user.getId(),course.getCoursePay());
-        userService.increaseBalance(course.getCourseOwner().getId(),course.getCoursePay());
+        user.setBalance(user.getBalance() - course.getCoursePay());
+        CourseUser owner = course.getCourseOwner();
+        owner.setBalance(owner.getBalance() + course.getCoursePay());
 
         course.addLearner(user);
-
         userRepository.save(user);
-        courseRepository.save(course);
 
     }
 

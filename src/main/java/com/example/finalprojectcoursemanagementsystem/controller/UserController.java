@@ -43,39 +43,46 @@ public class UserController {
 
     @GetMapping("/myAccount")
     public ResponseEntity<UserDTO> getAccountInfo() {
-        SecurityUser user = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getUserById(user.getCourseUser().getId()));
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(userService.getUserById(securityUser.getCourseUser().getId()));
     }
 
-    @GetMapping("/getPurchasedCourses")
+    @GetMapping("/purchasedCourses")
     public ResponseEntity<List<CourseDTO>> getPurchasedCourses() {
-        SecurityUser user = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getPurchasedCourses(user.getCourseUser().getId()));
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId()));
     }
 
-    @PutMapping("/myAccount/increaseBalance/{amount}")
+    @PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/createdCourses")
+    public ResponseEntity<List<CourseDTO>> getCreatedCourses() {
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId()));
+    }
+
+    @PutMapping("/balance/increase/{amount}")
     public ResponseEntity<String> increaseBalance(@PathVariable @Positive Double amount) {
-        SecurityUser user = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok("Current balance: " + userService.increaseBalance(user.getCourseUser().getId(), amount));
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok("Current balance: " + userService.increaseBalance(securityUser, amount));
     }
 
-    @PutMapping("/myAccount/decreaseBalance/{amount}")
+    @PutMapping("/balance/decrease/{amount}")
     public ResponseEntity<String> decreaseBalance(@PathVariable @Positive Double amount) {
-        SecurityUser user = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok("Current balance: " + userService.decreaseBalance(user.getCourseUser().getId(), amount));
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok("Current balance: " + userService.decreaseBalance(securityUser, amount));
     }
 
-    @PostMapping("/myAccount/registerCourse/{courseId}")
+    @PostMapping("register/{courseId}")
     public ResponseEntity<String> registerForCourse(@PathVariable Long courseId) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        courseService.enrollForCourse(securityUser.getCourseUser().getId(), courseId);
+        courseService.enrollForCourse(securityUser, courseId);
         return ResponseEntity.ok("Enrolled for course " + courseId);
     }
 
     @PutMapping("/myAccount/email")
-    public ResponseEntity<UserDTO> updateUsername(@RequestBody @Email String email) {
+    public ResponseEntity<UserDTO> updateEmail(@RequestBody @Email String email) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.changeEmail(securityUser.getCourseUser().getId(), email));
+        return ResponseEntity.ok(userService.changeEmail(securityUser, email));
     }
 
     @PutMapping("/myAccount/unp")

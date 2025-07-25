@@ -32,7 +32,7 @@ public class Course {
     @JsonManagedReference
     private CourseUser courseOwner;
 
-    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<Lesson> lessons = new ArrayList<>();
 
@@ -52,6 +52,11 @@ public class Course {
     public void addLearner(CourseUser courseUser) {
         this.enrolledUsers.add(courseUser);
         courseUser.enrollCourse(this);
+    }
+
+    public void addLesson(Lesson lesson) {
+        lessons.add(lesson);
+        lesson.setCourse(this);
     }
 
 }

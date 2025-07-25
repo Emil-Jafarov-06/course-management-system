@@ -1,7 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.model.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 @Getter
@@ -10,13 +9,15 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class CourseCreateRequest {
+public class LessonCreateRequest {
 
     @NotBlank
-    private String courseName;
+    private String lessonName;
     @NotBlank
-    private String courseDescription;
-    @Positive
-    private Double coursePay;
+    private String lessonDescription;
+    @NotBlank
+    private String videoURL;
+    @NotBlank
+    private String lessonText;
 
 }

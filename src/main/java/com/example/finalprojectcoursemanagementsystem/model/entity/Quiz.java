@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
+import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,13 +22,20 @@ public class Quiz {
 
     private String quizDescription;
 
-    private Integer maxMinutes;
+    private Integer duration;
 
-    @OneToOne(orphanRemoval = true, cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
+    @OneToOne(orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn
     private Lesson lesson;
 
-    @OneToMany(mappedBy = "quiz", orphanRemoval = true, cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "quiz", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Question> questions = new ArrayList<>();
+
+    public static QuizDTO mapIntoDTO(Quiz quiz){
+        return QuizDTO.builder()
+                .id(quiz.getId())
+                .quizDescription(quiz.getQuizDescription())
+                .duration(quiz.getDuration()).build();
+    }
 
 }

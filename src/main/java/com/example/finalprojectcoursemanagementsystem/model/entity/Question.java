@@ -1,10 +1,8 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
+import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import jakarta.persistence.*;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Setter
@@ -25,9 +23,22 @@ public class Question {
     @JoinColumn
     private Quiz quiz;
 
-    private String correctAnswer;
+    private String correctVariant;
 
-    @OneToMany(mappedBy = "question", fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.DETACH)
-    List<Answer> answers = new ArrayList<>();
+    private String variantA;
+    private String variantB;
+    private String variantC;
+    private String variantD;
+
+    public static QuestionDTO mapIntoDTO(Question question) {
+        return QuestionDTO.builder()
+                .id(question.getId())
+                .questionText(question.getQuestionText())
+                .correctVariant(question.getCorrectVariant())
+                .variantA(question.getVariantA())
+                .variantB(question.getVariantB())
+                .variantC(question.getVariantC())
+                .variantD(question.getVariantD()).build();
+    }
 
 }

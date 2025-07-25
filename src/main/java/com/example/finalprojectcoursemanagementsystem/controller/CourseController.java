@@ -40,13 +40,12 @@ public class CourseController {
         return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
     }
 
-    @GetMapping
 
     @PreAuthorize("hasRole('TEACHER')")
     @PostMapping("/createCourse")
     public ResponseEntity<CourseDTO> createCourse(@RequestBody CourseCreateRequest courseCreateRequest){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(courseService.createCourse(securityUser.getCourseUser().getId(), courseCreateRequest));
+        return ResponseEntity.ok(courseService.createCourse(securityUser, courseCreateRequest));
     }
 
     @PreAuthorize("hasRole('TEACHER')")
@@ -55,6 +54,5 @@ public class CourseController {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(courseService.updateCourse(securityUser.getCourseUser().getId(), id, courseUpdateRequest));
     }
-
 
 }

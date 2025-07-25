@@ -67,7 +67,14 @@ public class UserService {
 
     @Transactional
     public Double increaseBalance(SecurityUser securityUser, Double amount) {
-        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+        long startTime = System.nanoTime();
+//        CourseUser user = entityManager.merge(securityUser.getCourseUser());
+//        Double updatedAmount = user.getBalance() + amount;
+//        user.setBalance(updatedAmount);
+//        userRepository.save(user);
+        long endTime = System.nanoTime();
+        System.out.println("Time taken to increase balance: " + (endTime - startTime) / 1000000 + " ms");
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow();
         Double updatedAmount = user.getBalance() + amount;
         user.setBalance(updatedAmount);
         userRepository.save(user);

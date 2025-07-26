@@ -54,6 +54,12 @@ public class CourseUser {
     @JsonManagedReference
     private List<Course> paidCourses = new ArrayList<>();
 
+    @OneToMany(mappedBy = "courseUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LessonProgress> lessonProgressList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "courseUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CourseProgress> courseProgressList = new ArrayList<>();
+
     public static UserDTO mapIntoDTO(CourseUser courseUser) {
         return UserDTO.builder()
                 .id(courseUser.getId())

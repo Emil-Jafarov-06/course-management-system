@@ -11,20 +11,19 @@ import lombok.*;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class LessonProgress {
+public class CourseProgress {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "course_user_id")
-    private CourseUser courseUser;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "lesson_id")
-    private Lesson lesson;
+    CourseUser courseUser;
 
-    private ProgressEnum progress = ProgressEnum.NOT_STARTED;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    Course course;
+    ProgressEnum progress = ProgressEnum.NOT_STARTED;
+
+    int totalUnits;
+    int completedUnits;
 
 }

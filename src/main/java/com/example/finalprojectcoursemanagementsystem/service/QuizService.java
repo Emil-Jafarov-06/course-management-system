@@ -3,6 +3,7 @@ package com.example.finalprojectcoursemanagementsystem.service;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
+import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuestionCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
@@ -24,6 +25,9 @@ public class QuizService {
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
     private final QuestionRepository questionRepository;
+    private final LessonProgressRepository lessonProgressRepository;
+    private final CourseProgressRepository courseProgressRepository;
+    private final UserService userService;
 
     @Transactional
     public QuizDTO getQuiz(Long userId, Long quizId) {
@@ -56,12 +60,33 @@ public class QuizService {
         int accurateResponses = 0;
         Map<Long, String> userResponses = request.getAnswers();
         for(Question question : quiz.getQuestions()) {
-            if(userResponses.get(question.getId()).equals(question.getCorrectVariant())) {
+            String userAnswer = userResponses.get(question.getId());
+            if(userAnswer != null && userAnswer.equals(question.getCorrectVariant())) {
                 accurateResponses++;
             }
         }
 
-        return String.format("Your score is %d out of %d", accurateResponses, quiz.getQuestions().size());
+        double correctness = (double) accurateResponses / quiz.getQuestions().size();
+        if(correctness >= 0.75){
+            Lesson lesson = quiz.getLesson();
+            LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lesson.getId());
+            lessonProgress.setProgress(ProgressEnum.COMPLETED);
+            lessonProgressRepository.save(lessonProgress);
+            CourseProgress courseProgress = courseProgressRepository.findCourseProgressByCourse_IdAndCourseUser_Id(course.getId(), userId);
+            courseProgress.setCompletedUnits(courseProgress.getCompletedUnits() + 1);
+            if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
+                courseProgress.setProgress(ProgressEnum.COMPLETED);
+                courseProgressRepository.save(courseProgress);
+                userService.sendEmailAboutComplation();
+                return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!", accurateResponses, quiz.getQuestions().size());
+            } else{
+                courseProgress.setProgress(ProgressEnum.IN_PROGRESS);
+                courseProgressRepository.save(courseProgress);
+                return String.format("Your score is %d out of %d. You successfully completed the lesson!", accurateResponses, quiz.getQuestions().size());
+            }
+        } else{
+            return String.format("Your score is %d out of %d. You failed the lesson. Retake the quiz.", accurateResponses, quiz.getQuestions().size());
+        }
 
     }
 

@@ -1,20 +1,22 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
-import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
-import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
+import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
+import com.example.finalprojectcoursemanagementsystem.model.entity.*;
+import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
-import com.example.finalprojectcoursemanagementsystem.repository.CourseRepository;
-import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
+import com.example.finalprojectcoursemanagementsystem.repository.*;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -25,6 +27,9 @@ public class CourseService {
 
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final CourseProgressRepository courseProgressRepository;
+    private final LessonProgressRepository lessonProgressRepository;
+    private final LessonRepository lessonRepository;
 
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Course not found with id " + id));
@@ -77,6 +82,29 @@ public class CourseService {
         owner.setBalance(owner.getBalance() + course.getCoursePay());
 
         course.addLearner(user);
+
+        CourseProgress courseProgress = CourseProgress.builder()
+                .courseUser(user)
+                .course(course)
+                .progress(ProgressEnum.NOT_STARTED)
+                .completedUnits(0)
+                .totalUnits(course.getLessons().size()).build();
+        user.getCourseProgressList().add(courseProgress);
+
+
+        List<LessonProgress> lessonProgressList = new ArrayList<>();
+        for(Lesson lesson : course.getLessons()) {
+            LessonProgress lessonProgress = LessonProgress.builder()
+                    .courseUser(user)
+                    .lesson(lesson)
+                    .progress(ProgressEnum.NOT_STARTED).build();
+            user.getLessonProgressList().add(lessonProgress);
+            lessonProgressList.add(lessonProgress);
+        }
+
+
+        lessonProgressRepository.saveAll(lessonProgressList);
+        courseProgressRepository.save(courseProgress);
         userRepository.saveAll(List.of(user, owner));
 
     }
@@ -91,15 +119,9 @@ public class CourseService {
             throw new RuntimeException("Only the owner teacher can update courses!");
         }
 
-        if(Objects.nonNull(courseUpdateRequest.getCourseName())){
-            course.setCourseName(courseUpdateRequest.getCourseName());
-        }
-        if(Objects.nonNull(courseUpdateRequest.getCourseDescription())){
-            course.setCourseDescription(courseUpdateRequest.getCourseDescription());
-        }
-        if(Objects.nonNull(courseUpdateRequest.getCoursePay())){
-            course.setCoursePay(courseUpdateRequest.getCoursePay());
-        }
+        course.setCourseName(courseUpdateRequest.getCourseName());
+        course.setCourseDescription(courseUpdateRequest.getCourseDescription());
+        course.setCoursePay(courseUpdateRequest.getCoursePay());
 
         Course updatedCourse = courseRepository.save(course);
         return Course.mapIntoDTO(updatedCourse);
@@ -112,6 +134,31 @@ public class CourseService {
         return  courses.stream()
                 .map(Course::mapIntoDTO)
                 .collect(Collectors.toList());
+
+    }
+
+    @Transactional
+    public LessonDTO continueCourse(Long userId, Long courseId) {
+
+        CourseUser user = userRepository.findById(userId).orElseThrow();
+        Course course = courseRepository.findById(courseId).orElseThrow();
+
+        if(!userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
+            throw new RuntimeException("Only the enrolled users can continue courses!");
+        }
+
+        for(Lesson lesson : course.getLessons()) {
+            LessonProgress progress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lesson.getId());
+            if(progress.getProgress().equals(ProgressEnum.COMPLETED)) {
+                continue;
+            } else {
+                progress.setProgress(ProgressEnum.IN_PROGRESS);
+                lessonProgressRepository.save(progress);
+                lessonRepository.save(lesson);
+                return Lesson.mapIntoDTO(lesson);
+            }
+        }
+        throw new RuntimeException("All lessons have been completed!");
 
     }
 }

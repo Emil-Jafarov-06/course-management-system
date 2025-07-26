@@ -21,24 +21,26 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping("")
 public class UserController {
 
     private final UserService userService;
     private final CourseService courseService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/id/{id}")
+    @GetMapping("users/id/{id}")
     public ResponseEntity<UserDTO> getUserInfo(@PathVariable @Positive Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    @GetMapping("/name/{name}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("users/name/{name}")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable @NotBlank String name) {
         return ResponseEntity.ok(userService.getUserDTOByUserName(name));
     }
 
-    @GetMapping("/email/{email}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("users/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable @Email String email) {
         return ResponseEntity.ok(userService.getUserByUserEmail(email));
     }
@@ -54,8 +56,6 @@ public class UserController {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId()));
     }
-
-    @GetMapping("/purchas{id}")
 
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/createdCourses")

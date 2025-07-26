@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
@@ -44,9 +45,10 @@ public class CourseController {
     }
 
     @GetMapping("/{courseId}/continue")
-    public ResponseEntity<CourseDTO> continueCourse(@PathVariable @Positive Long courseId){
+    public ResponseEntity<LessonDTO> continueCourse(@PathVariable @Positive Long courseId){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
+
+        return ResponseEntity.ok(courseService.continueCourse(securityUser.getCourseUser().getId(), courseId));
     }
 
     @PreAuthorize("hasRole('TEACHER')")

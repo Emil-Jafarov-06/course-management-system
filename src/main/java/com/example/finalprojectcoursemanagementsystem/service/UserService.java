@@ -1,6 +1,9 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
-import com.example.finalprojectcoursemanagementsystem.exception.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.IncorrectUsernamePasswordException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
@@ -31,21 +34,25 @@ public class UserService {
     private final CourseMapper courseMapper;
 
     public UserDTO getUserById(Long id) {
-        CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(id)
+                .orElseThrow(()-> new UserNotFoundException("User not found with id " + id + "!"));
         return userMapper.toUserDTO(user);
     }
 
     public CourseUser getUserByUserName(String name) {
-        return userRepository.findCourseUserByUserName(name).orElseThrow(EntityNotFoundException::new);
+        return userRepository.findCourseUserByUserName(name)
+                .orElseThrow(()-> new UserNotFoundException("User not found with name " + name + "!"));
     }
 
     public UserDTO getUserDTOByUserName(String name) {
-        CourseUser user = userRepository.findCourseUserByUserName(name).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findCourseUserByUserName(name)
+                .orElseThrow(() -> new UserNotFoundException("User not found with name " + name + "!"));
         return userMapper.toUserDTO(user);
     }
 
     public UserDTO getUserByUserEmail(String email) {
-        CourseUser user = userRepository.findCourseUserByEmail(email).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findCourseUserByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found with email " + email + "!"));
         return userMapper.toUserDTO(user);
     }
 
@@ -70,7 +77,8 @@ public class UserService {
 
     @Transactional
     public Double increaseBalance(SecurityUser securityUser, Double amount) {
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(()-> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId() + "!"));
         Double updatedAmount = user.getBalance() + amount;
         user.setBalance(updatedAmount);
         userRepository.save(user);
@@ -79,7 +87,8 @@ public class UserService {
 
     @Transactional
     public Double decreaseBalance(SecurityUser securityUser, Double amount) {
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId() + "!"));
         if(user.getBalance() >= amount) {
             Double updatedAmount = user.getBalance() - amount;
             user.setBalance(updatedAmount);
@@ -102,9 +111,10 @@ public class UserService {
 
     @Transactional
     public UserDTO updateUsernamePassword(SecurityUser securityUser, UsernamePasswordUpdateRequest request) {
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId() + "!"));
         if(!user.getUserName().equals(request.getOldUsername())){
-            throw new RuntimeException("Cannot update another account!");
+            throw new ForbiddenAccessException("Cannot update another account!");
         }
         if(passwordEncoder.matches(request.getOldPassword(), user.getEncryptedPassword())) {
             user.setUserName(request.getNewUsername());
@@ -112,7 +122,7 @@ public class UserService {
             CourseUser updatedUser = userRepository.save(user);
             return userMapper.toUserDTO(updatedUser);
         } else{
-            throw new RuntimeException("Username or password is not correct!");
+            throw new IncorrectUsernamePasswordException("Username or password is not correct!");
         }
     }
 
@@ -120,12 +130,12 @@ public class UserService {
     public void deleteAccount(SecurityUser securityUser, AccountDeleteRequest request) {
         CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
         if(!user.getUserName().equals(request.getUsername())){
-            throw new RuntimeException("Cannot delete another account!");
+            throw new ForbiddenAccessException("Cannot delete another account!");
         }
         if(passwordEncoder.matches(request.getPassword(), securityUser.getPassword())) {
             userRepository.deleteById(user.getId());
         } else{
-            throw new RuntimeException("Username or password is not correct!");
+            throw new IncorrectUsernamePasswordException("Username or password is not correct!");
         }
     }
 
@@ -141,5 +151,10 @@ public class UserService {
         return users.stream()
                 .map(userMapper::toUserDTO)
                 .collect(Collectors.toList());
+    }
+
+    public void sendEmailAboutComplation(Long userId, Long id) {
+
+
     }
 }

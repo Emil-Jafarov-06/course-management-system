@@ -33,7 +33,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("users/name/{name}")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable @NotBlank String name) {
         return ResponseEntity.ok(userService.getUserDTOByUserName(name));

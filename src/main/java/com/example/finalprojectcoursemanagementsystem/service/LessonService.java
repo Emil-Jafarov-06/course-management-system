@@ -1,18 +1,18 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.CourseNotFoundException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.LessonNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
-import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Lesson;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.CourseRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.LessonRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,15 +28,12 @@ public class LessonService {
     @Transactional
     public LessonDTO addLesson(Long id, Long courseId, LessonCreateRequest request) {
 
-        Course course = courseRepository.findById(courseId).orElseThrow(EntityNotFoundException::new);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!course.getCourseOwner().getId().equals(id)){
-            throw new RuntimeException("Only the owner teacher can add lesson!");
+            throw new ForbiddenAccessException("Only the owner teacher can add lesson!");
         }
-        Lesson lesson = new Lesson();
-        lesson.setLessonName(request.getLessonName());
-        lesson.setLessonText(request.getLessonText());
-        lesson.setLessonDescription(request.getLessonDescription());
-        lesson.setVideoURL(request.getVideoURL());
+        Lesson lesson = lessonMapper.mapIntoEntity(request);
 
         course.addLesson(lesson);
         courseRepository.save(course);
@@ -47,19 +44,21 @@ public class LessonService {
 
     @Transactional
     public LessonDTO getLesson(Long userId, Long lessonId) {
-        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + lessonId));
         Course course = lesson.getCourse();
         if(userRepository.isCourseAlreadyPurchased(userId, course.getId()) || course.getCourseOwner().getId().equals(userId)){
             return lessonMapper.mapIntoDTO(lesson);
         } else {
-            throw new RuntimeException("Only the owner teacher and enrolled users can view lesson!");
+            throw new ForbiddenAccessException("Only the owner teacher and enrolled users can view lesson!");
         }
     }
 
     @Transactional
     public LessonDTO updateLesson(Long id, Long lessonId, LessonUpdateRequest request) {
 
-        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + lessonId));
         if(lesson.getCourse().getCourseOwner().getId().equals(id)){
             lesson.setLessonName(request.getLessonName());
             lesson.setLessonText(request.getLessonText());
@@ -67,20 +66,21 @@ public class LessonService {
             lesson.setVideoURL(request.getVideoURL());
             return lessonMapper.mapIntoDTO(lessonRepository.save(lesson));
         }
-        throw new RuntimeException("Only the owner teacher can update lesson!");
+        throw new ForbiddenAccessException("Only the owner teacher can update lesson!");
 
     }
 
     @Transactional
     public String deleteLesson(Long userId, Long lessonId) {
 
-        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + lessonId));
         Course course = lesson.getCourse();
         if(course.getCourseOwner().getId().equals(userId)){
             lessonRepository.deleteById(lessonId);
             return "Lesson deleted successfully!";
         } else {
-            throw new RuntimeException("Only the owner teacher and enrolled users can delete lesson!");
+            throw new ForbiddenAccessException("Only the owner teacher and enrolled users can delete lesson!");
         }
 
     }

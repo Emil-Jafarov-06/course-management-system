@@ -1,17 +1,12 @@
 package com.example.finalprojectcoursemanagementsystem.model.dto;
 
-import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
-import com.example.finalprojectcoursemanagementsystem.model.entity.UserProfile;
 import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Setter
 @Getter
@@ -21,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserDTO {
 
+    @Positive
     private Long id;
     @NotBlank
     private String userName;

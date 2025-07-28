@@ -1,5 +1,10 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.AlreadyEnrolledException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.CourseNotFoundException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
@@ -8,12 +13,10 @@ import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
 import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
-import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.*;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,12 +39,14 @@ public class CourseService {
     private final LessonMapper lessonMapper;
 
     public CourseDTO getCourseById(Long id) {
-        Course course = courseRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Course not found with id " + id));
+        Course course = courseRepository.findById(id)
+                .orElseThrow(()-> new CourseNotFoundException("Course not found with id " + id));
         return courseMapper.mapIntoDTO(course);
     }
 
     public CourseDTO getCourseByName(String courseName) {
-        Course course = courseRepository.findCourseByCourseNameIgnoreCase(courseName);
+        Course course = courseRepository.findCourseByCourseNameIgnoreCase(courseName)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with name " + courseName));
         return courseMapper.mapIntoDTO(course);
     }
 
@@ -54,28 +59,32 @@ public class CourseService {
 
     @Transactional
     public CourseDTO createCourse(SecurityUser securityUser, CourseCreateRequest courseCreateRequest) {
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId()));
         Course course = courseMapper.mapIntoEntity(courseCreateRequest);
         user.createCourse(course);
+        course.setCourseOwner(user);
         userRepository.save(user);
-
+        courseRepository.save(course);
         return courseMapper.mapIntoDTO(course);
     }
 
     @Transactional
     public void enrollForCourse(SecurityUser securityUser, Long courseId) {
 
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId()));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
         if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
-            throw new RuntimeException("Already enrolled for this course!");
+            throw new AlreadyEnrolledException("Already enrolled in this course!");
         }
         if(user.equals(course.getCourseOwner())){
             throw new RuntimeException("You are the owner of this course!");
         }
         if(user.getBalance() < course.getCoursePay()){
-            throw new RuntimeException("Insufficient balance!");
+            throw new InsufficientBalanceException("Insufficient balance!");
         }
 
         user.setBalance(user.getBalance() - course.getCoursePay());
@@ -114,11 +123,13 @@ public class CourseService {
     @Transactional
     public CourseDTO updateCourse(Long userId, Long courseId, CourseUpdateRequest courseUpdateRequest) {
 
-        CourseUser user = userRepository.findById(userId).orElseThrow();
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        CourseUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
         if(!course.getCourseOwner().getId().equals(user.getId())){
-            throw new RuntimeException("Only the owner teacher can update courses!");
+            throw new ForbiddenAccessException("You are not allowed to update this course!");
         }
 
         course.setCourseName(courseUpdateRequest.getCourseName());
@@ -131,25 +142,22 @@ public class CourseService {
     }
 
     public List<CourseDTO> getCoursesFromTeacher(Long id) {
-        CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        if(user.getRole().equals(RoleEnum.TEACHER)){
-            throw new RuntimeException("Only teachers can have courses!");
-        }
         List<Course> courses = courseRepository.findCoursesByCourseOwner_Id(id);
         return  courses.stream()
                 .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
-
     }
 
     @Transactional
     public LessonDTO continueCourse(Long userId, Long courseId) {
 
-        CourseUser user = userRepository.findById(userId).orElseThrow();
-        Course course = courseRepository.findById(courseId).orElseThrow();
+        CourseUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
         if(!userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
-            throw new RuntimeException("Only the enrolled users can continue courses!");
+            throw new ForbiddenAccessException("Only the enrolled users can continue courses!");
         }
 
         for(Lesson lesson : course.getLessons()) {
@@ -169,9 +177,10 @@ public class CourseService {
 
     @Transactional
     public List<LessonDTO> getLessonsInfoForCourse(Long userId, Long courseId) {
-        Course course = courseRepository.findById(courseId).orElseThrow(EntityNotFoundException::new);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!userRepository.isCourseAlreadyPurchased(userId, course.getId()) && !course.getCourseOwner().getId().equals(userId)){
-            throw new RuntimeException("Only the owner teacher and enrolled users can view lessons!");
+            throw new ForbiddenAccessException("Only the owner teacher and enrolled users can view lessons!");
         }
         List<Lesson> lessons = lessonRepository.findLessonsByCourse_Id(courseId);
         return lessons.stream()
@@ -181,9 +190,10 @@ public class CourseService {
 
     @Transactional
     public List<UserDTO> getEnrolledUsers(Long userId, Long courseId) {
-        Course course = courseRepository.findById(courseId).orElseThrow(EntityNotFoundException::new);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!course.getCourseOwner().getId().equals(userId)){
-            throw new RuntimeException("Only the owner teacher can view enrolled users!");
+            throw new ForbiddenAccessException("Only the owner teacher can view enrolled users!");
         }
         List<CourseUser> enrolledUsers = course.getEnrolledUsers();
         return enrolledUsers.stream()

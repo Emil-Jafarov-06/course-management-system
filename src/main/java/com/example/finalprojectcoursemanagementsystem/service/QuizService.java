@@ -1,5 +1,8 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.LessonNotFoundException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.QuizNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuestionMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuizMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
@@ -11,14 +14,10 @@ import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRe
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.*;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -37,14 +36,16 @@ public class QuizService {
     @Transactional
     public QuizDTO getQuiz(Long userId, Long quizId) {
 
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
 
         if(!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
-            throw new RuntimeException("Only enrolled users can take quizzes!");
+            throw new ForbiddenAccessException("You are not allowed to view this quiz!");
         }
 
         QuizDTO quizDTO = quizMapper.mapIntoDTO(quiz);
+
         /*
         List<Question> questions = questionRepository.getQuestionsByQuiz_Id(quizId);
         quizDTO.setQuestions(questions.stream()
@@ -58,11 +59,12 @@ public class QuizService {
     @Transactional
     public String checkQuiz(Long userId, Long quizId, QuizSubmitRequest request) {
 
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
 
         if(!course.getCourseOwner().getId().equals(userId)) {
-            throw new RuntimeException("Only enrolled users can submit quizzes!");
+            throw new ForbiddenAccessException("You are not allowed to submit this quiz!");
         }
         int accurateResponses = 0;
         Map<Long, String> userResponses = request.getAnswers();
@@ -84,7 +86,7 @@ public class QuizService {
             if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
                 courseProgress.setProgress(ProgressEnum.COMPLETED);
                 courseProgressRepository.save(courseProgress);
-                userService.sendEmailAboutComplation();
+                userService.sendEmailAboutComplation(userId, course.getId());
                 return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);
@@ -101,10 +103,10 @@ public class QuizService {
     public QuizDTO createQuiz(Long userId, QuizCreateRequest request) {
 
         Lesson lesson = lessonRepository.findById(request.getLessonId())
-                .orElseThrow(EntityNotFoundException::new);
+                .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + request.getLessonId()));
         Course course = lesson.getCourse();
         if(!course.getCourseOwner().getId().equals(userId)) {
-            throw new RuntimeException("Only owner teachers can create quizzes!");
+            throw new ForbiddenAccessException("Only owner teachers can create quizzes!");
         }
         Quiz quiz = Quiz.builder()
                 .duration(request.getDuration())
@@ -118,10 +120,11 @@ public class QuizService {
     @Transactional
     public QuestionDTO addQuestionToQuiz(Long userId, Long quizId, QuestionCreateRequest request) {
 
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
         if(!course.getCourseOwner().getId().equals(userId)) {
-            throw new RuntimeException("Only owner teachers modify quizzes!");
+            throw new ForbiddenAccessException("Only owner teachers modify quizzes!");
         }
         Question question = questionMapper.mapIntoEntity(request);
         quiz.getQuestions().add(question);
@@ -133,10 +136,11 @@ public class QuizService {
 
     @Transactional
     public String deleteQuestionFromQuiz(Long id, Long questionId) {
-        Question question = questionRepository.findById(questionId).orElseThrow(EntityNotFoundException::new);
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new QuizNotFoundException("Question not found with id " + questionId));
         Quiz quiz = question.getQuiz();
         if(!quiz.getLesson().getCourse().getCourseOwner().getId().equals(id)) {
-            throw new RuntimeException("Only owner teachers modify quizzes!");
+            throw new ForbiddenAccessException("Only owner teachers modify quizzes!");
         }
         quiz.getQuestions().remove(question);
         questionRepository.delete(question);
@@ -145,10 +149,11 @@ public class QuizService {
 
     @Transactional
     public QuizDTO updateQuiz(Long id, Long quizId, QuizUpdateRequest request) {
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
         if(!course.getCourseOwner().getId().equals(id)) {
-            throw new RuntimeException("Only owner teachers modify quizzes!");
+            throw new ForbiddenAccessException("Only owner teachers modify quizzes!");
         }
         quiz.setDuration(request.getDuration());
         quiz.setQuizDescription(request.getQuizDescription());
@@ -157,11 +162,12 @@ public class QuizService {
     }
 
     public String deleteQuiz(Long id, Long quizId) {
-        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Lesson lesson = quiz.getLesson();
         Course course = lesson.getCourse();
         if(!course.getCourseOwner().getId().equals(id)) {
-            throw new RuntimeException("Only owner teachers modify quizzes!");
+            throw new ForbiddenAccessException("Only owner teachers modify quizzes!");
         }
         lesson.setQuiz(null);
         lessonRepository.save(lesson);

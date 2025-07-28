@@ -1,5 +1,0 @@
-Delete a course (teacher-only):
-
-@PreAuthorize("hasRole('TEACHER')")
-@DeleteMapping("/course/{id}")
-public ResponseEntity<?> deleteCourse(@PathVariable Long id)

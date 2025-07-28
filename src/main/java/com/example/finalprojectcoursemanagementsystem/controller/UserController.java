@@ -28,9 +28,9 @@ public class UserController {
     private final CourseService courseService;
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("users/id/{id}")
-    public ResponseEntity<UserDTO> getUserInfo(@PathVariable @Positive Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("users/all")
+    public ResponseEntity<List<UserDTO>> getAllUsers(){
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -39,7 +39,23 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserDTOByUserName(name));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/createdCourses")
+    public ResponseEntity<List<CourseDTO>> getCreatedCourses() {
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId()));
+    }
+
+    @GetMapping("users/id/{id}")
+    public ResponseEntity<UserDTO> getUserInfo(@PathVariable @Positive Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @GetMapping("/users/search/{nameLike}")
+    public ResponseEntity<List<UserDTO>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name) {
+        return ResponseEntity.ok(userService.getUsersByNameLike(name));
+    }
+
     @GetMapping("users/email/{email}")
     public ResponseEntity<UserDTO> getUserByEmail(@PathVariable @Email String email) {
         return ResponseEntity.ok(userService.getUserByUserEmail(email));
@@ -55,13 +71,6 @@ public class UserController {
     public ResponseEntity<List<CourseDTO>> getPurchasedCourses() {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId()));
-    }
-
-    @PreAuthorize("hasRole('TEACHER')")
-    @GetMapping("/createdCourses")
-    public ResponseEntity<List<CourseDTO>> getCreatedCourses() {
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId()));
     }
 
     @PostMapping("register/{courseId}")

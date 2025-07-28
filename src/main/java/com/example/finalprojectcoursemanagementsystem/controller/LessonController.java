@@ -20,12 +20,6 @@ public class LessonController {
 
     private  final LessonService lessonService;
 
-    @GetMapping("/{lessonId}")
-    public ResponseEntity<LessonDTO> getLesson(@PathVariable @Positive Long lessonId) {
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(lessonService.getLesson(securityUser.getCourseUser().getId(), lessonId));
-    }
-
     @PreAuthorize("hasRole('TEACHER')")
     @PostMapping("/course/{id}/addLesson")
     public ResponseEntity<LessonDTO> addLesson(@PathVariable("id") @Positive Long courseId,
@@ -36,14 +30,22 @@ public class LessonController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @DeleteMapping("/{lessonId}")
-    public ResponseEntity<String> deleteLesson(@PathVariable @Positive Long lessonId){
-
+    public ResponseEntity<?> deleteLesson(@PathVariable @Positive Long lessonId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(lessonService.deleteLesson(securityUser.getCourseUser().getId(), lessonId));
     }
 
+    @PreAuthorize("hasRole('TEACHER')")
     @PutMapping("/{lessonId}")
     public ResponseEntity<?> updateLesson(@PathVariable @Positive Long lessonId, @RequestBody @Valid LessonUpdateRequest request){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(lessonService.updateLesson(securityUser.getCourseUser().getId(), lessonId, request));
+    }
+
+    @GetMapping("/{lessonId}")
+    public ResponseEntity<LessonDTO> getLesson(@PathVariable @Positive Long lessonId) {
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(lessonService.getLesson(securityUser.getCourseUser().getId(), lessonId));
     }
 
 }

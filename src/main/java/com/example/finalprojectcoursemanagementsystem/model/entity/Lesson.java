@@ -27,7 +27,7 @@ public class Lesson {
     @JsonManagedReference
     private Course course;
 
-    @OneToOne(mappedBy = "lesson")
+    @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private Quiz quiz;
 
     public static LessonDTO mapIntoDTO(Lesson lesson){
@@ -36,7 +36,8 @@ public class Lesson {
                 .lessonName(lesson.getLessonName())
                 .lessonDescription(lesson.getLessonDescription())
                 .lessonText(lesson.getLessonText())
-                .videoURL(lesson.getVideoURL()).build();
+                .videoURL(lesson.getVideoURL())
+                .quizId(lesson.getQuiz().getId()).build();
     }
 
 }

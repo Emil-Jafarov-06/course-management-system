@@ -1,7 +1,10 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
+import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
 import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
@@ -9,7 +12,6 @@ import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreate
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.*;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.Positive;
@@ -18,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,17 +31,22 @@ public class CourseService {
     private final CourseProgressRepository courseProgressRepository;
     private final LessonProgressRepository lessonProgressRepository;
     private final LessonRepository lessonRepository;
+    private final UserMapper userMapper;
+    private final CourseMapper courseMapper;
 
+    //
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id).orElseThrow(()-> new EntityNotFoundException("Course not found with id " + id));
         return Course.mapIntoDTO(course);
     }
 
+    //
     public CourseDTO getCourseByName(String courseName) {
         Course course = courseRepository.findCourseByCourseNameIgnoreCase(courseName);
         return Course.mapIntoDTO(course);
     }
 
+    //
     public List<CourseDTO> searchForCourses(String courseName) {
         List<Course> courses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase(courseName);
         return courses.stream()
@@ -48,13 +54,11 @@ public class CourseService {
                 .collect(Collectors.toList());
     }
 
+    //
     @Transactional
     public CourseDTO createCourse(SecurityUser securityUser, CourseCreateRequest courseCreateRequest) {
         CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
-        Course course = new Course();
-        course.setCourseName(courseCreateRequest.getCourseName());
-        course.setCourseDescription(courseCreateRequest.getCourseDescription());
-        course.setCoursePay(courseCreateRequest.getCoursePay());
+        Course course = courseMapper.mapIntoEntity(courseCreateRequest);
         user.createCourse(course);
         userRepository.save(user);
 
@@ -109,6 +113,7 @@ public class CourseService {
 
     }
 
+    //
     @Transactional
     public CourseDTO updateCourse(Long userId, Long courseId, CourseUpdateRequest courseUpdateRequest) {
 
@@ -127,9 +132,12 @@ public class CourseService {
         return Course.mapIntoDTO(updatedCourse);
 
     }
-
+    //
     public List<CourseDTO> getCoursesFromTeacher(Long id) {
-
+        CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        if(user.getRole().equals(RoleEnum.TEACHER)){
+            throw new RuntimeException("Only teachers can have courses!");
+        }
         List<Course> courses = courseRepository.findCoursesByCourseOwner_Id(id);
         return  courses.stream()
                 .map(Course::mapIntoDTO)
@@ -137,6 +145,7 @@ public class CourseService {
 
     }
 
+    //
     @Transactional
     public LessonDTO continueCourse(Long userId, Long courseId) {
 
@@ -160,5 +169,30 @@ public class CourseService {
         }
         throw new RuntimeException("All lessons have been completed!");
 
+    }
+
+    //
+    @Transactional
+    public List<LessonDTO> getLessonsInfoForCourse(Long userId, Long courseId) {
+        Course course = courseRepository.findById(courseId).orElseThrow(EntityNotFoundException::new);
+        if(!userRepository.isCourseAlreadyPurchased(userId, course.getId()) && !course.getCourseOwner().getId().equals(userId)){
+            throw new RuntimeException("Only the owner teacher and enrolled users can view lessons!");
+        }
+        List<Lesson> lessons = lessonRepository.findLessonsByCourse_Id(courseId);
+        return lessons.stream()
+                .map(Lesson::mapIntoDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<UserDTO> getEnrolledUsers(Long userId, Long courseId) {
+        Course course = courseRepository.findById(courseId).orElseThrow(EntityNotFoundException::new);
+        if(!course.getCourseOwner().getId().equals(userId)){
+            throw new RuntimeException("Only the owner teacher can view enrolled users!");
+        }
+        List<CourseUser> enrolledUsers = course.getEnrolledUsers();
+        return enrolledUsers.stream()
+                .map(userMapper::toUserDTO)
+                .collect(Collectors.toList());
     }
 }

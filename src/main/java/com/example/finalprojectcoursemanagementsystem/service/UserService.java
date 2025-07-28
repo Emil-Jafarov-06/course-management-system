@@ -1,6 +1,7 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
 import com.example.finalprojectcoursemanagementsystem.exception.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
@@ -9,9 +10,9 @@ import com.example.finalprojectcoursemanagementsystem.model.request.AccountDelet
 import com.example.finalprojectcoursemanagementsystem.model.request.UsernamePasswordUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,10 +26,11 @@ public class UserService {
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     public UserDTO getUserById(Long id) {
         CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        return CourseUser.mapIntoDTO(user);
+        return userMapper.toUserDTO(user);
     }
 
     public CourseUser getUserByUserName(String name) {
@@ -37,12 +39,12 @@ public class UserService {
 
     public UserDTO getUserDTOByUserName(String name) {
         CourseUser user = userRepository.findCourseUserByUserName(name).orElseThrow(EntityNotFoundException::new);
-        return CourseUser.mapIntoDTO(user);
+        return userMapper.toUserDTO(user);
     }
 
     public UserDTO getUserByUserEmail(String email) {
         CourseUser user = userRepository.findCourseUserByEmail(email).orElseThrow(EntityNotFoundException::new);
-        return CourseUser.mapIntoDTO(user);
+        return userMapper.toUserDTO(user);
     }
 
     public CourseUser registerUser(CourseUser user) {
@@ -50,6 +52,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    //
     public List<CourseDTO> getPurchasedCourses(Long userId) {
         List<Course> courses = userRepository.findPurchasedCoursesById(userId);
         return courses.stream()
@@ -57,6 +60,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    //
     public List<CourseDTO> getCreatedCourses(Long userId) {
         List<Course> courses = userRepository.findCoursesCreatedById(userId);
         return courses.stream()
@@ -93,7 +97,7 @@ public class UserService {
         }
         user.setEmail(newEmail);
         CourseUser updatedUser = userRepository.save(user);
-        return CourseUser.mapIntoDTO(updatedUser);
+        return userMapper.toUserDTO(updatedUser);
     }
 
     @Transactional
@@ -106,7 +110,7 @@ public class UserService {
             user.setUserName(request.getNewUsername());
             user.setEncryptedPassword(passwordEncoder.encode(request.getNewPassword()));
             CourseUser updatedUser = userRepository.save(user);
-            return CourseUser.mapIntoDTO(updatedUser);
+            return userMapper.toUserDTO(updatedUser);
         } else{
             throw new RuntimeException("Username or password is not correct!");
         }
@@ -123,5 +127,19 @@ public class UserService {
         } else{
             throw new RuntimeException("Username or password is not correct!");
         }
+    }
+
+    public List<UserDTO> getAllUsers() {
+        List<CourseUser> users = userRepository.findAll();
+        return users.stream()
+                .map(userMapper::toUserDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDTO> getUsersByNameLike(@NotBlank String name) {
+        List<CourseUser> users = userRepository.findCourseUsersByUserNameLikeIgnoreCase(name);
+        return users.stream()
+                .map(userMapper::toUserDTO)
+                .collect(Collectors.toList());
     }
 }

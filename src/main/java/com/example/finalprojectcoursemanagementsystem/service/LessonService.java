@@ -11,6 +11,7 @@ import com.example.finalprojectcoursemanagementsystem.repository.LessonRepositor
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -67,4 +68,20 @@ public class LessonService {
         throw new RuntimeException("Only the owner teacher can update lesson!");
 
     }
+
+    @Transactional
+    public String deleteLesson(Long userId, Long lessonId) {
+
+        Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
+        Course course = lesson.getCourse();
+        if(course.getCourseOwner().getId().equals(userId)){
+            lessonRepository.deleteById(lessonId);
+            return "Lesson deleted successfully!";
+        } else {
+            throw new RuntimeException("Only the owner teacher and enrolled users can delete lesson!");
+        }
+
+    }
+
+
 }

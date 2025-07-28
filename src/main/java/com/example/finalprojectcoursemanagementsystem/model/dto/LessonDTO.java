@@ -15,5 +15,6 @@ public class LessonDTO {
     private String lessonDescription;
     private String videoURL;
     private String lessonText;
+    private Long quizId;
 
 }

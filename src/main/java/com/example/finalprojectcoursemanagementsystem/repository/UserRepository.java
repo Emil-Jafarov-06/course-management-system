@@ -15,6 +15,8 @@ public interface UserRepository extends JpaRepository<CourseUser, Long> {
 
     Optional<CourseUser> findCourseUserByEmail(String email);
 
+    List<CourseUser> findCourseUsersByUserNameLikeIgnoreCase(String userName);
+
     @Query("SELECT DISTINCT c FROM CourseUser cu JOIN cu.paidCourses c LEFT JOIN FETCH c.courseOwner WHERE cu.id = :id")
     List<Course> findPurchasedCoursesById(Long id);
 

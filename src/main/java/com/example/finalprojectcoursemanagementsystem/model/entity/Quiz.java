@@ -28,7 +28,7 @@ public class Quiz {
     @JoinColumn
     private Lesson lesson;
 
-    @OneToMany(mappedBy = "quiz", orphanRemoval = true, cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "quiz", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
     public static QuizDTO mapIntoDTO(Quiz quiz){

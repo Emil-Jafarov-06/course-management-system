@@ -70,16 +70,6 @@ public class CourseUser {
                 .role(courseUser.getRole()).build();
     }
 
-    public static CourseUser mapIntoEntity(UserDTO userDTO) {
-        return CourseUser.builder()
-                .id(userDTO.getId())
-                .email(userDTO.getEmail())
-                .encryptedPassword(userDTO.getPassword())
-                .balance(userDTO.getBalance())
-                .userName(userDTO.getUserName())
-                .role(userDTO.getRole()).build();
-    }
-
     public void enrollCourse(Course course) {
         paidCourses.add(course);
     }

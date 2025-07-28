@@ -7,6 +7,7 @@ import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuestionCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.QuizUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -78,7 +79,7 @@ public class QuizService {
                 courseProgress.setProgress(ProgressEnum.COMPLETED);
                 courseProgressRepository.save(courseProgress);
                 userService.sendEmailAboutComplation();
-                return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!", accurateResponses, quiz.getQuestions().size());
+                return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);
                 courseProgressRepository.save(courseProgress);
@@ -142,5 +143,31 @@ public class QuizService {
         quiz.getQuestions().remove(question);
         questionRepository.delete(question);
         return String.format("Question with id %d deleted successfully!", questionId);
+    }
+
+    @Transactional
+    public QuizDTO updateQuiz(Long id, Long quizId, QuizUpdateRequest request) {
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Course course = quiz.getLesson().getCourse();
+        if(!course.getCourseOwner().getId().equals(id)) {
+            throw new RuntimeException("Only owner teachers modify quizzes!");
+        }
+        quiz.setDuration(request.getDuration());
+        quiz.setQuizDescription(request.getQuizDescription());
+        quizRepository.save(quiz);
+        return Quiz.mapIntoDTO(quiz);
+    }
+
+    public String deleteQuiz(Long id, Long quizId) {
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(EntityNotFoundException::new);
+        Lesson lesson = quiz.getLesson();
+        Course course = lesson.getCourse();
+        if(!course.getCourseOwner().getId().equals(id)) {
+            throw new RuntimeException("Only owner teachers modify quizzes!");
+        }
+        lesson.setQuiz(null);
+        lessonRepository.save(lesson);
+        quizRepository.delete(quiz);
+        return String.format("Quiz with id %d deleted successfully!", quizId);
     }
 }

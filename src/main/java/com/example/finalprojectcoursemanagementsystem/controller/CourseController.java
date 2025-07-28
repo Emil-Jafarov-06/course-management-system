@@ -1,11 +1,13 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.CourseService;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
@@ -23,6 +25,41 @@ import java.util.List;
 public class CourseController {
 
     private final CourseService courseService;
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PostMapping("/course")
+    public ResponseEntity<CourseDTO> createCourse(@RequestBody @Valid CourseCreateRequest courseCreateRequest){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.createCourse(securityUser, courseCreateRequest));
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PutMapping("/{id}")
+    public ResponseEntity<CourseDTO> updateCourse(@PathVariable @Positive Long id,
+                                                  @RequestBody @Valid CourseUpdateRequest courseUpdateRequest){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.updateCourse(securityUser.getCourseUser().getId(), id, courseUpdateRequest));
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @GetMapping("/{courseId}/enrolledUsers")
+    public ResponseEntity<List<UserDTO>> getEnrolledUsers(@PathVariable @Positive Long courseId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return  ResponseEntity.ok(courseService.getEnrolledUsers(securityUser.getCourseUser().getId(), courseId));
+    }
+
+    @GetMapping("{courseId}/lessons")
+    public ResponseEntity<List<LessonDTO>> getLessons(@PathVariable @Positive Long courseId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.getLessonsInfoForCourse(securityUser.getCourseUser().getId(), courseId));
+    }
+
+    // LessonResponseForInfo
+    @GetMapping("/{courseId}/continue")
+    public ResponseEntity<LessonDTO> continueCourse(@PathVariable @Positive Long courseId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.continueCourse(securityUser.getCourseUser().getId(), courseId));
+    }
 
     @GetMapping("/id/{id}")
     public ResponseEntity<CourseDTO> getCourseInfo(@PathVariable @Positive Long id){
@@ -42,28 +79,6 @@ public class CourseController {
     @GetMapping("/teacher/{id}")
     public ResponseEntity<List<CourseDTO>> getCoursesByTeacherId(@PathVariable @Positive Long id){
         return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
-    }
-
-    @GetMapping("/{courseId}/continue")
-    public ResponseEntity<LessonDTO> continueCourse(@PathVariable @Positive Long courseId){
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        return ResponseEntity.ok(courseService.continueCourse(securityUser.getCourseUser().getId(), courseId));
-    }
-
-    @PreAuthorize("hasRole('TEACHER')")
-    @PostMapping("/course")
-    public ResponseEntity<CourseDTO> createCourse(@RequestBody @Valid CourseCreateRequest courseCreateRequest){
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(courseService.createCourse(securityUser, courseCreateRequest));
-    }
-
-    @PreAuthorize("hasRole('TEACHER')")
-    @PutMapping("/course/{id}")
-    public ResponseEntity<CourseDTO> updateCourse(@PathVariable @Positive Long id,
-                                                  @RequestBody @Valid CourseUpdateRequest courseUpdateRequest){
-        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(courseService.updateCourse(securityUser.getCourseUser().getId(), id, courseUpdateRequest));
     }
 
 }

@@ -5,6 +5,7 @@ import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuestionCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
+import com.example.finalprojectcoursemanagementsystem.model.request.QuizUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.QuizService;
 import jakarta.validation.Valid;
@@ -55,6 +56,13 @@ public class QuizController {
     }
 
     @PreAuthorize("hasRole('TEACHER')")
+    @PutMapping("/{quizId}")
+    public ResponseEntity<QuizDTO> updateQuiz(@PathVariable Long quizId, @RequestBody QuizUpdateRequest request){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(quizService.updateQuiz(securityUser.getCourseUser().getId(), quizId, request));
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
     @DeleteMapping("question/{questionId}")
     public ResponseEntity<String> deleteQuestionFromQuiz(@PathVariable @Positive Long questionId){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -62,4 +70,10 @@ public class QuizController {
         return ResponseEntity.ok(quizService.deleteQuestionFromQuiz(securityUser.getCourseUser().getId(), questionId));
     }
 
+    @PreAuthorize("hasRole('TEACHER')")
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<?> deleteQuiz(@PathVariable Long quizId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(quizService.deleteQuiz(securityUser.getCourseUser().getId(), quizId));
+    }
 }

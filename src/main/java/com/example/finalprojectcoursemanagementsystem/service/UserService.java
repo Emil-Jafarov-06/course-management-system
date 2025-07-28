@@ -147,8 +147,8 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public List<UserDTO> getUsersByNameLike(@NotBlank String name) {
-        List<CourseUser> users = userRepository.findCourseUsersByUserNameLikeIgnoreCase(name);
+    public List<UserDTO> getUsersByNameLike(String name) {
+        List<CourseUser> users = userRepository.findCourseUsersByUserNameLikeIgnoreCase("%" + name + "%");
         return users.stream()
                 .map(userMapper::toUserDTO)
                 .collect(Collectors.toList());

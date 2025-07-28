@@ -51,7 +51,7 @@ public class CourseService {
     }
 
     public List<CourseDTO> searchForCourses(String courseName) {
-        List<Course> courses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase(courseName);
+        List<Course> courses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase("%" + courseName + "%");
         return courses.stream()
                 .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
@@ -64,9 +64,8 @@ public class CourseService {
         Course course = courseMapper.mapIntoEntity(courseCreateRequest);
         user.createCourse(course);
         course.setCourseOwner(user);
-        userRepository.save(user);
-        courseRepository.save(course);
-        return courseMapper.mapIntoDTO(course);
+        Course savedCourse = courseRepository.save(course);
+        return courseMapper.mapIntoDTO(savedCourse);
     }
 
     @Transactional

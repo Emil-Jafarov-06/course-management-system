@@ -3,6 +3,7 @@ package com.example.finalprojectcoursemanagementsystem.service;
 import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.LessonNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.QuizNotFoundException;
+import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuestionMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuizMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
@@ -29,7 +30,7 @@ public class QuizService {
     private final QuestionRepository questionRepository;
     private final LessonProgressRepository lessonProgressRepository;
     private final CourseProgressRepository courseProgressRepository;
-    private final UserService userService;
+    private final EmailService emailService;
     private final QuestionMapper questionMapper;
     private final QuizMapper quizMapper;
 
@@ -58,7 +59,8 @@ public class QuizService {
 
     @Transactional
     public String checkQuiz(Long userId, Long quizId, QuizSubmitRequest request) {
-
+        CourseUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
@@ -86,7 +88,9 @@ public class QuizService {
             if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
                 courseProgress.setProgress(ProgressEnum.COMPLETED);
                 courseProgressRepository.save(courseProgress);
-                userService.sendEmailAboutComplation(userId, course.getId());
+                emailService.sendSimpleEmail(user.getEmail(),
+                        "Course Completion",
+                        "You have successfully completed the course : " + course.getCourseName() + " by " + course.getCourseOwner().getUserName());
                 return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);

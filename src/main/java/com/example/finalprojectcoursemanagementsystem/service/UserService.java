@@ -128,7 +128,8 @@ public class UserService {
 
     @Transactional
     public void deleteAccount(SecurityUser securityUser, AccountDeleteRequest request) {
-        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId()).orElseThrow(EntityNotFoundException::new);
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId() + "!"));
         if(!user.getUserName().equals(request.getUsername())){
             throw new ForbiddenAccessException("Cannot delete another account!");
         }
@@ -151,10 +152,5 @@ public class UserService {
         return users.stream()
                 .map(userMapper::toUserDTO)
                 .collect(Collectors.toList());
-    }
-
-    public void sendEmailAboutComplation(Long userId, Long id) {
-
-
     }
 }

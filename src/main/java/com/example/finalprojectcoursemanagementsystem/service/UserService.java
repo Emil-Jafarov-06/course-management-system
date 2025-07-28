@@ -1,6 +1,7 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
 import com.example.finalprojectcoursemanagementsystem.exception.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
@@ -27,6 +28,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final CourseMapper courseMapper;
 
     public UserDTO getUserById(Long id) {
         CourseUser user = userRepository.findById(id).orElseThrow(EntityNotFoundException::new);
@@ -52,19 +54,17 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    //
     public List<CourseDTO> getPurchasedCourses(Long userId) {
         List<Course> courses = userRepository.findPurchasedCoursesById(userId);
         return courses.stream()
-                .map(Course::mapIntoDTO)
+                .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
     }
 
-    //
     public List<CourseDTO> getCreatedCourses(Long userId) {
         List<Course> courses = userRepository.findCoursesCreatedById(userId);
         return courses.stream()
-                .map(Course::mapIntoDTO)
+                .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
     }
 

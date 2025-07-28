@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.mappers.QuestionMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Question;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuestionUpdateRequest;
@@ -14,16 +15,16 @@ import org.springframework.stereotype.Service;
 public class QuestionService {
 
     private final QuestionRepository questionRepository;
+    private final QuestionMapper questionMapper;
 
     @Transactional
     public QuestionDTO getQuestionById(Long userId, Long questionId) {
         Question question = questionRepository.findById(questionId).orElseThrow(EntityExistsException::new);
         if(question.getQuiz().getLesson().getCourse().getCourseOwner().getId().equals(userId)){
-            return Question.mapIntoDTO(question);
+            return questionMapper.mapIntoDTO(question);
         }
         throw new RuntimeException("Only the owner teacher and enrolled users can view question!");
     }
-
 
     public QuestionDTO updateQuestionById(Long userId, Long questionId, QuestionUpdateRequest request) {
 
@@ -37,7 +38,7 @@ public class QuestionService {
         question.setVariantC(request.getVariantC());
         question.setVariantD(request.getVariantD());
         question.setCorrectVariant(request.getCorrectVariant());
-        return Question.mapIntoDTO(questionRepository.save(question));
+        return questionMapper.mapIntoDTO(questionRepository.save(question));
 
     }
 

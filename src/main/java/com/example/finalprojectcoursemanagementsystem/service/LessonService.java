@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
@@ -22,6 +23,7 @@ public class LessonService {
     private final LessonRepository lessonRepository;
     private  final CourseRepository courseRepository;
     private final UserRepository userRepository;
+    private final LessonMapper lessonMapper;
 
     @Transactional
     public LessonDTO addLesson(Long id, Long courseId, LessonCreateRequest request) {
@@ -40,7 +42,7 @@ public class LessonService {
         courseRepository.save(course);
         Lesson savedLesson = lessonRepository.save(lesson);
 
-        return Lesson.mapIntoDTO(savedLesson);
+        return lessonMapper.mapIntoDTO(savedLesson);
     }
 
     @Transactional
@@ -48,7 +50,7 @@ public class LessonService {
         Lesson lesson = lessonRepository.findById(lessonId).orElseThrow(EntityNotFoundException::new);
         Course course = lesson.getCourse();
         if(userRepository.isCourseAlreadyPurchased(userId, course.getId()) || course.getCourseOwner().getId().equals(userId)){
-            return Lesson.mapIntoDTO(lesson);
+            return lessonMapper.mapIntoDTO(lesson);
         } else {
             throw new RuntimeException("Only the owner teacher and enrolled users can view lesson!");
         }
@@ -63,7 +65,7 @@ public class LessonService {
             lesson.setLessonText(request.getLessonText());
             lesson.setLessonDescription(request.getLessonDescription());
             lesson.setVideoURL(request.getVideoURL());
-            return Lesson.mapIntoDTO(lessonRepository.save(lesson));
+            return lessonMapper.mapIntoDTO(lessonRepository.save(lesson));
         }
         throw new RuntimeException("Only the owner teacher can update lesson!");
 

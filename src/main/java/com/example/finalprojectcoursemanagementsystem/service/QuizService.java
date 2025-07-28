@@ -1,5 +1,7 @@
 package com.example.finalprojectcoursemanagementsystem.service;
 
+import com.example.finalprojectcoursemanagementsystem.mappers.QuestionMapper;
+import com.example.finalprojectcoursemanagementsystem.mappers.QuizMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
@@ -29,6 +31,8 @@ public class QuizService {
     private final LessonProgressRepository lessonProgressRepository;
     private final CourseProgressRepository courseProgressRepository;
     private final UserService userService;
+    private final QuestionMapper questionMapper;
+    private final QuizMapper quizMapper;
 
     @Transactional
     public QuizDTO getQuiz(Long userId, Long quizId) {
@@ -40,11 +44,13 @@ public class QuizService {
             throw new RuntimeException("Only enrolled users can take quizzes!");
         }
 
-        QuizDTO quizDTO = Quiz.mapIntoDTO(quiz);
+        QuizDTO quizDTO = quizMapper.mapIntoDTO(quiz);
+        /*
         List<Question> questions = questionRepository.getQuestionsByQuiz_Id(quizId);
         quizDTO.setQuestions(questions.stream()
-                .map(Question::mapIntoDTO)
+                .map(questionMapper::mapIntoDTO)
                 .collect(Collectors.toList()));
+         */
 
         return quizDTO;
     }
@@ -106,7 +112,7 @@ public class QuizService {
                 .lesson(lesson).build();
         lesson.setQuiz(quiz);
         Quiz savedQuiz = quizRepository.save(quiz);
-        return Quiz.mapIntoDTO(savedQuiz);
+        return quizMapper.mapIntoDTO(savedQuiz);
     }
 
     @Transactional
@@ -117,19 +123,11 @@ public class QuizService {
         if(!course.getCourseOwner().getId().equals(userId)) {
             throw new RuntimeException("Only owner teachers modify quizzes!");
         }
-        Question question = Question.builder()
-                .questionText(request.getQuestionText())
-                .quiz(quiz)
-                .correctVariant(request.getCorrectVariant())
-                .variantA(request.getVariantA())
-                .variantB(request.getVariantB())
-                .variantC(request.getVariantC())
-                .variantD(request.getVariantD()).build();
-
+        Question question = questionMapper.mapIntoEntity(request);
         quiz.getQuestions().add(question);
         question.setQuiz(quiz);
         quizRepository.save(quiz);
-        return Question.mapIntoDTO(questionRepository.save(question));
+        return questionMapper.mapIntoDTO(questionRepository.save(question));
 
     }
 
@@ -154,8 +152,8 @@ public class QuizService {
         }
         quiz.setDuration(request.getDuration());
         quiz.setQuizDescription(request.getQuizDescription());
-        quizRepository.save(quiz);
-        return Quiz.mapIntoDTO(quiz);
+        Quiz savedQuiz = quizRepository.save(quiz);
+        return quizMapper.mapIntoDTO(savedQuiz);
     }
 
     public String deleteQuiz(Long id, Long quizId) {

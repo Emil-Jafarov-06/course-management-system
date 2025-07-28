@@ -1,6 +1,5 @@
 package com.example.finalprojectcoursemanagementsystem.model.dto;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import lombok.*;
 

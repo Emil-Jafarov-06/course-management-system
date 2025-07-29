@@ -35,6 +35,18 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("set/admin/{userId}")
+    public ResponseEntity<String> addNewAdmin(@PathVariable Long userId){
+        return ResponseEntity.ok(userService.addNewAdmin(userId));
+    }
+
+    @PreAuthorize("hasRole('HEAD_ADMIN')")
+    @DeleteMapping("set/admin/{userId}")
+    public ResponseEntity<String> deleteAdmin(@PathVariable Long userId){
+        return ResponseEntity.ok(userService.takeAdminRoleFromUser(userId));
+    }
+
     @GetMapping("users/name/{name}")
     public ResponseEntity<UserDTO> getUserByName(@PathVariable @NotBlank String name) {
         return ResponseEntity.ok(userService.getUserDTOByUserName(name));

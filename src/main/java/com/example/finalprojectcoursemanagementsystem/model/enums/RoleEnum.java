@@ -1,5 +1,5 @@
 package com.example.finalprojectcoursemanagementsystem.model.enums;
 
 public enum RoleEnum {
-    TEACHER, LEARNER, ADMIN;
+    TEACHER, LEARNER, ADMIN, HEAD_ADMIN;
 }

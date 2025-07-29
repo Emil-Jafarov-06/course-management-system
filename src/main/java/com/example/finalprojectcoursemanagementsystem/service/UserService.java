@@ -10,6 +10,7 @@ import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
+import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.AccountDeleteRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.UsernamePasswordUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
@@ -20,9 +21,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -180,5 +179,19 @@ public class UserService {
     public Page<UserDTO> getUsersByNameLike(@NotBlank String name, @PositiveOrZero int page) {
         Page<CourseUser> pagedUsers = userRepository.findCourseUsersByUserNameLikeIgnoreCase(name , PageRequest.of(page, 10));
         return pagedUsers.map(userMapper::toUserDTO);
+    }
+
+    public String addNewAdmin(Long userId) {
+        CourseUser user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
+        user.setRole(RoleEnum.ADMIN);
+        userRepository.save(user);
+        return "User with id " + userId + " has been set admin!";
+    }
+
+    public String takeAdminRoleFromUser(Long userId) {
+        CourseUser user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
+        user.setRole(RoleEnum.LEARNER);
+        userRepository.save(user);
+        return "Admin with id " + userId + " has been removed!";
     }
 }

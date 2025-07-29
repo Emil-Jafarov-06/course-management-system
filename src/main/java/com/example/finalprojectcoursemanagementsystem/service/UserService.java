@@ -17,7 +17,12 @@ import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -61,18 +66,33 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /*
     public List<CourseDTO> getPurchasedCourses(Long userId) {
         List<Course> courses = userRepository.findPurchasedCoursesById(userId);
         return courses.stream()
                 .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
     }
+     */
 
+    public Page<CourseDTO> getPurchasedCourses(Long userId, int page){
+        Page<Course> pagedCourses = userRepository.findPurchasedCoursesById(userId, PageRequest.of(page, 10));
+        return pagedCourses.map(courseMapper::mapIntoDTO);
+    }
+
+    /*
     public List<CourseDTO> getCreatedCourses(Long userId) {
         List<Course> courses = userRepository.findCoursesCreatedById(userId);
         return courses.stream()
                 .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
+    }
+
+     */
+
+    public Page<CourseDTO> getCreatedCourses(Long userId, int page){
+        Page<Course> pagedCourses = userRepository.findCoursesCreatedById(userId, PageRequest.of(page, 10));
+        return pagedCourses.map(courseMapper::mapIntoDTO);
     }
 
     @Transactional
@@ -147,10 +167,18 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    /*
     public List<UserDTO> getUsersByNameLike(String name) {
+
         List<CourseUser> users = userRepository.findCourseUsersByUserNameLikeIgnoreCase("%" + name + "%");
         return users.stream()
                 .map(userMapper::toUserDTO)
                 .collect(Collectors.toList());
+    }
+     */
+
+    public Page<UserDTO> getUsersByNameLike(@NotBlank String name, @PositiveOrZero int page) {
+        Page<CourseUser> pagedUsers = userRepository.findCourseUsersByUserNameLikeIgnoreCase(name , PageRequest.of(page, 10));
+        return pagedUsers.map(userMapper::toUserDTO);
     }
 }

@@ -15,10 +15,15 @@ import com.example.finalprojectcoursemanagementsystem.model.entity.*;
 import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.response.LessonResponseForInfo;
 import com.example.finalprojectcoursemanagementsystem.repository.*;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -50,11 +55,18 @@ public class CourseService {
         return courseMapper.mapIntoDTO(course);
     }
 
+    /*
     public List<CourseDTO> searchForCourses(String courseName) {
         List<Course> courses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase("%" + courseName + "%");
         return courses.stream()
                 .map(courseMapper::mapIntoDTO)
                 .collect(Collectors.toList());
+    }
+     */
+
+    public Page<CourseDTO> searchForCourses(@NotBlank String name, @PositiveOrZero int page) {
+        Page<Course> pagedCourses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase(name, PageRequest.of(page, 10));
+        return pagedCourses.map(courseMapper::mapIntoDTO);
     }
 
     @Transactional
@@ -140,11 +152,9 @@ public class CourseService {
 
     }
 
-    public List<CourseDTO> getCoursesFromTeacher(Long id) {
-        List<Course> courses = courseRepository.findCoursesByCourseOwner_Id(id);
-        return  courses.stream()
-                .map(courseMapper::mapIntoDTO)
-                .collect(Collectors.toList());
+    public Page<CourseDTO> getCoursesFromTeacher(Long id, int page) {
+        Page<Course> courses = userRepository.findCoursesCreatedById(id, PageRequest.of(page, 10));
+        return courses.map(courseMapper::mapIntoDTO);
     }
 
     @Transactional
@@ -171,11 +181,10 @@ public class CourseService {
             }
         }
         throw new RuntimeException("All lessons have been completed!");
-
     }
 
     @Transactional
-    public List<LessonDTO> getLessonsInfoForCourse(Long userId, Long courseId) {
+    public List<LessonResponseForInfo> getLessonsInfoForCourse(Long userId, Long courseId) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!userRepository.isCourseAlreadyPurchased(userId, course.getId()) && !course.getCourseOwner().getId().equals(userId)){
@@ -183,20 +192,21 @@ public class CourseService {
         }
         List<Lesson> lessons = lessonRepository.findLessonsByCourse_Id(courseId);
         return lessons.stream()
-                .map(lessonMapper::mapIntoDTO)
+                .map(lesson -> {
+                    return new LessonResponseForInfo(lesson.getId(), lesson.getLessonName(), lesson.getLessonDescription());
+                })
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public List<UserDTO> getEnrolledUsers(Long userId, Long courseId) {
+    public Page<UserDTO> getEnrolledUsers(Long userId, Long courseId, @PositiveOrZero int page) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!course.getCourseOwner().getId().equals(userId)){
             throw new ForbiddenAccessException("Only the owner teacher can view enrolled users!");
         }
-        List<CourseUser> enrolledUsers = course.getEnrolledUsers();
-        return enrolledUsers.stream()
-                .map(userMapper::toUserDTO)
-                .collect(Collectors.toList());
+        Page<CourseUser> pagedUsers = courseRepository.findEnrolledUsersByCourseId(courseId, PageRequest.of(page, 10));
+        return pagedUsers.map(userMapper::toUserDTO);
     }
+
 }

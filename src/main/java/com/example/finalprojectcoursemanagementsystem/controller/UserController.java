@@ -11,7 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,9 +42,9 @@ public class UserController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/createdCourses")
-    public ResponseEntity<List<CourseDTO>> getCreatedCourses() {
+    public ResponseEntity<Page<CourseDTO>> getCreatedCourses(@RequestParam(defaultValue = "0") int page) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId()));
+        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId(), page));
     }
 
     @GetMapping("users/id/{id}")
@@ -51,8 +53,8 @@ public class UserController {
     }
 
     @GetMapping("/users/search/{nameLike}")
-    public ResponseEntity<List<UserDTO>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name) {
-        return ResponseEntity.ok(userService.getUsersByNameLike(name));
+    public ResponseEntity<Page<UserDTO>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name, @RequestParam(defaultValue = "0") @PositiveOrZero int page) {
+        return ResponseEntity.ok(userService.getUsersByNameLike(name, page));
     }
 
     @GetMapping("users/email/{email}")
@@ -67,9 +69,9 @@ public class UserController {
     }
 
     @GetMapping("/purchasedCourses")
-    public ResponseEntity<List<CourseDTO>> getPurchasedCourses() {
+    public ResponseEntity<Page<CourseDTO>> getPurchasedCourses(@RequestParam(defaultValue = "0") @PositiveOrZero int page) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId()));
+        return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId(), page));
     }
 
     @PostMapping("register/{courseId}")

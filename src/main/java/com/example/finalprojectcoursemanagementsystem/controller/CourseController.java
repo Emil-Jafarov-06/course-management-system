@@ -5,13 +5,15 @@ import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.response.LessonResponseForInfo;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.CourseService;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,18 +45,17 @@ public class CourseController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/{courseId}/enrolledUsers")
-    public ResponseEntity<List<UserDTO>> getEnrolledUsers(@PathVariable @Positive Long courseId){
+    public ResponseEntity<Page<UserDTO>> getEnrolledUsers(@PathVariable @Positive Long courseId, @RequestParam(defaultValue = "0") @PositiveOrZero int page){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return  ResponseEntity.ok(courseService.getEnrolledUsers(securityUser.getCourseUser().getId(), courseId));
+        return  ResponseEntity.ok(courseService.getEnrolledUsers(securityUser.getCourseUser().getId(), courseId, page));
     }
 
     @GetMapping("{courseId}/lessons")
-    public ResponseEntity<List<LessonDTO>> getLessons(@PathVariable @Positive Long courseId){
+    public ResponseEntity<List<LessonResponseForInfo>> getLessons(@PathVariable @Positive Long courseId){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(courseService.getLessonsInfoForCourse(securityUser.getCourseUser().getId(), courseId));
     }
 
-    // LessonResponseForInfo
     @GetMapping("/{courseId}/continue")
     public ResponseEntity<LessonDTO> continueCourse(@PathVariable @Positive Long courseId){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -72,13 +73,13 @@ public class CourseController {
     }
 
     @GetMapping("/search/{nameLike}")
-    public ResponseEntity<List<CourseDTO>> getCoursesByNameLike(@PathVariable(name = "nameLike") @NotBlank String name){
-        return ResponseEntity.ok(courseService.searchForCourses(name));
+    public ResponseEntity<Page<CourseDTO>> getCoursesByNameLike(@PathVariable(name = "nameLike") @NotBlank String name, @RequestParam(defaultValue = "0") @PositiveOrZero int page){
+        return ResponseEntity.ok(courseService.searchForCourses(name, page));
     }
 
     @GetMapping("/teacher/{id}")
-    public ResponseEntity<List<CourseDTO>> getCoursesByTeacherId(@PathVariable @Positive Long id){
-        return ResponseEntity.ok(courseService.getCoursesFromTeacher(id));
+    public ResponseEntity<Page<CourseDTO>> getCoursesByTeacherId(@PathVariable @Positive Long id, @RequestParam(defaultValue = "0") @PositiveOrZero int page){
+        return ResponseEntity.ok(courseService.getCoursesFromTeacher(id, page));
     }
 
 }

@@ -43,15 +43,17 @@ public class QuizService {
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
 
-        if(!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
-            throw new ForbiddenAccessException("You are not allowed to view this quiz!");
+        if(userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
+            LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
+            lessonProgress.setQuizStarted(LocalDateTime.now());
+            lessonProgressRepository.save(lessonProgress);
+
+            return quizMapper.mapIntoDTO(quiz);
         }
-
-        LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
-        lessonProgress.setQuizStarted(LocalDateTime.now());
-        lessonProgressRepository.save(lessonProgress);
-
-        return quizMapper.mapIntoDTO(quiz);
+        if(course.getCourseOwner().getId().equals(userId)) {
+            return quizMapper.mapIntoDTO(quiz);
+        }
+        throw new ForbiddenAccessException("You are not allowed to view this quiz!");
     }
 
     @Transactional

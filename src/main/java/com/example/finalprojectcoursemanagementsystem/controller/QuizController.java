@@ -24,7 +24,7 @@ public class QuizController {
     private final QuizService quizService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<QuizDTO> takeQuiz(@PathVariable("id") @Positive Long id){
+    public ResponseEntity<QuizDTO> getQuiz(@PathVariable("id") @Positive Long id){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         return ResponseEntity.ok(quizService.getQuiz(securityUser.getCourseUser().getId() ,id));

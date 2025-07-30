@@ -9,6 +9,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 @Component
 @RequiredArgsConstructor
 public class AdminSetter implements CommandLineRunner {
@@ -32,6 +36,10 @@ public class AdminSetter implements CommandLineRunner {
             userRepository.save(admin);
             System.out.println("️Admin user created: admin / admin123321nimda");
         }
+
     }
+
+
+
 }
 

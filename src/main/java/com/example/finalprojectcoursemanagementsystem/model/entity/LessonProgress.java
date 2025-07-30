@@ -4,6 +4,8 @@ import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Setter
 @Getter
@@ -26,5 +28,7 @@ public class LessonProgress {
     private Lesson lesson;
 
     private ProgressEnum progress = ProgressEnum.NOT_STARTED;
+
+    private LocalDateTime quizStarted;
 
 }

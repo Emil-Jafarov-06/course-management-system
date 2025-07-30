@@ -2,7 +2,6 @@ package com.example.finalprojectcoursemanagementsystem.controller;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
-import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.response.LessonResponseForInfo;
@@ -48,6 +47,13 @@ public class CourseController {
     public ResponseEntity<Page<UserDTO>> getEnrolledUsers(@PathVariable @Positive Long courseId, @RequestParam(defaultValue = "0") @PositiveOrZero int page){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return  ResponseEntity.ok(courseService.getEnrolledUsers(securityUser.getCourseUser().getId(), courseId, page));
+    }
+
+    @PreAuthorize("hasRole('TEACHER')")
+    @PatchMapping("/{courseId}/setAvailable")
+    public ResponseEntity<CourseDTO> setCourseAvailable(@PathVariable @Positive Long courseId){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(courseService.setCourseAvailable(securityUser.getCourseUser().getId(), courseId));
     }
 
     @GetMapping("{courseId}/lessons")

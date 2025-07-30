@@ -36,7 +36,6 @@ public class LessonService {
         Lesson lesson = lessonMapper.mapIntoEntity(request);
 
         course.addLesson(lesson);
-        courseRepository.save(course);
         Lesson savedLesson = lessonRepository.save(lesson);
 
         return lessonMapper.mapIntoDTO(savedLesson);
@@ -84,6 +83,4 @@ public class LessonService {
         }
 
     }
-
-
 }

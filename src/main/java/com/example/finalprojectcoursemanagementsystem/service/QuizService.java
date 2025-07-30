@@ -18,6 +18,8 @@ import com.example.finalprojectcoursemanagementsystem.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Service
@@ -45,16 +47,11 @@ public class QuizService {
             throw new ForbiddenAccessException("You are not allowed to view this quiz!");
         }
 
-        QuizDTO quizDTO = quizMapper.mapIntoDTO(quiz);
+        LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
+        lessonProgress.setQuizStarted(LocalDateTime.now());
+        lessonProgressRepository.save(lessonProgress);
 
-        /*
-        List<Question> questions = questionRepository.getQuestionsByQuiz_Id(quizId);
-        quizDTO.setQuestions(questions.stream()
-                .map(questionMapper::mapIntoDTO)
-                .collect(Collectors.toList()));
-         */
-
-        return quizDTO;
+        return quizMapper.mapIntoDTO(quiz);
     }
 
     @Transactional
@@ -65,8 +62,17 @@ public class QuizService {
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
 
-        if(!course.getCourseOwner().getId().equals(userId)) {
+        if(!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
             throw new ForbiddenAccessException("You are not allowed to submit this quiz!");
+        }
+
+        LessonProgress progress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
+        if(progress.getQuizStarted() == null){
+            throw new ForbiddenAccessException("Cannot submit quiz before starting it! Please try again later!");
+        }
+        LocalDateTime quizFinishTime = progress.getQuizStarted().plusMinutes(quiz.getDuration());
+        if(quizFinishTime.isBefore(LocalDateTime.now())){
+            throw new ForbiddenAccessException("Cannot submit quiz after the quiz duration has expired! Please try again later!");
         }
         int accurateResponses = 0;
         Map<Long, String> userResponses = request.getAnswers();

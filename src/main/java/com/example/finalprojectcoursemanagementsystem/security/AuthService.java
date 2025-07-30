@@ -1,6 +1,8 @@
 package com.example.finalprojectcoursemanagementsystem.security;
 
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
 import com.example.finalprojectcoursemanagementsystem.model.entity.CourseUser;
+import com.example.finalprojectcoursemanagementsystem.model.enums.RoleEnum;
 import com.example.finalprojectcoursemanagementsystem.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +24,9 @@ public class AuthService {
     private final JwtService jwtService;
 
     public AuthResponse register(RegisterRequest authRequest) {
+        if(authRequest.getRole() == RoleEnum.ADMIN || authRequest.getRole() == RoleEnum.HEAD_ADMIN){
+            throw new ForbiddenAccessException("Cannot register as admin or head admin! Please contact the system administrator for help. (Role: " + authRequest.getRole() + " )");
+        }
         CourseUser user = new CourseUser();
         user.setUserName(authRequest.getUsername());
         user.setEncryptedPassword(passwordEncoder.encode(authRequest.getPassword()));

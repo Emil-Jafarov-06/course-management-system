@@ -22,7 +22,7 @@ public class Lesson {
     private String videoURL;
     private String lessonText;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn
     @JsonManagedReference
     private Course course;

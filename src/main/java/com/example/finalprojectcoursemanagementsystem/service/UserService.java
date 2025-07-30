@@ -177,7 +177,7 @@ public class UserService {
      */
 
     public Page<UserDTO> getUsersByNameLike(@NotBlank String name, @PositiveOrZero int page) {
-        Page<CourseUser> pagedUsers = userRepository.findCourseUsersByUserNameLikeIgnoreCase(name , PageRequest.of(page, 10));
+        Page<CourseUser> pagedUsers = userRepository.findCourseUsersByUserNameLikeIgnoreCase("%" + name + "%" , PageRequest.of(page, 10));
         return pagedUsers.map(userMapper::toUserDTO);
     }
 

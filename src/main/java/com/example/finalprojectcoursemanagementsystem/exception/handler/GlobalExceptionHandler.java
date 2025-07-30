@@ -34,47 +34,47 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AlreadyEnrolledException.class)
     public ResponseEntity<String> handleAlreadyEnrolledException(AlreadyEnrolledException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("already.enrolled", null, locale), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(ForbiddenAccessException.class)
     public ResponseEntity<String> handleForbiddenAccessException(ForbiddenAccessException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("forbidden.access", null, locale), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(IncorrectUsernamePasswordException.class)
     public ResponseEntity<String> handleIncorrectUsernamePasswordException(IncorrectUsernamePasswordException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("incorrect.username.password", null, locale), HttpStatus.CONFLICT);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<String> handleInsufficientBalanceException(InsufficientBalanceException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("insufficient.balance", null, locale), HttpStatus.PAYMENT_REQUIRED);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.PAYMENT_REQUIRED);
     }
 
     @ExceptionHandler(CourseNotFoundException.class)
     public ResponseEntity<String> handleCourseNotFoundException(CourseNotFoundException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("course.not.found", null, locale), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(LessonNotFoundException.class)
     public ResponseEntity<String> handleLessonNotFoundException(LessonNotFoundException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("lesson.not.found", null, locale), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(QuestionNotFoundException.class)
     public ResponseEntity<String> handleQuestionNotFoundException(QuestionNotFoundException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("question.not.found", null, locale), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(QuizNotFoundException.class)
     public ResponseEntity<String> handleQuizNotFoundException(QuizNotFoundException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("quiz.not.found", null, locale), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<String> handleUserNotFoundException(UserNotFoundException exception, Locale locale){
-        return new ResponseEntity<>(messageSource.getMessage("user.not.found", null, locale), HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

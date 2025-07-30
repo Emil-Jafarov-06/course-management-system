@@ -29,13 +29,13 @@ public class UserController {
     private final UserService userService;
     private final CourseService courseService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasRole('HEAD_ADMIN')")
     @GetMapping("users/all")
     public ResponseEntity<List<UserDTO>> getAllUsers(){
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') || hasRole('HEAD_ADMIN')")
     @PutMapping("set/admin/{userId}")
     public ResponseEntity<String> addNewAdmin(@PathVariable Long userId){
         return ResponseEntity.ok(userService.addNewAdmin(userId));

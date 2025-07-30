@@ -3,6 +3,7 @@ package com.example.finalprojectcoursemanagementsystem.service;
 import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.AlreadyEnrolledException;
 import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
 import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.NonAvailableCourseException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.CourseNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
@@ -74,6 +75,7 @@ public class CourseService {
         CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId()));
         Course course = courseMapper.mapIntoEntity(courseCreateRequest);
+        course.setIsAvailable(false);
         user.createCourse(course);
         course.setCourseOwner(user);
         Course savedCourse = courseRepository.save(course);
@@ -88,6 +90,9 @@ public class CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
+        if(course.getIsAvailable() == false){
+            throw new NonAvailableCourseException("This course is not available!");
+        }
         if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
             throw new AlreadyEnrolledException("Already enrolled in this course!");
         }
@@ -118,6 +123,7 @@ public class CourseService {
             LessonProgress lessonProgress = LessonProgress.builder()
                     .courseUser(user)
                     .lesson(lesson)
+                    .quizStarted(null)
                     .progress(ProgressEnum.NOT_STARTED).build();
             user.getLessonProgressList().add(lessonProgress);
             lessonProgressList.add(lessonProgress);
@@ -209,4 +215,15 @@ public class CourseService {
         return pagedUsers.map(userMapper::toUserDTO);
     }
 
+    @Transactional
+    public CourseDTO setCourseAvailable(Long userId, Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
+        if(!course.getCourseOwner().getId().equals(userId)){
+            throw new ForbiddenAccessException("Only the owner teacher can modify the course availability status!");
+        }
+        course.setIsAvailable(true);
+        courseRepository.save(course);
+        return courseMapper.mapIntoDTO(courseRepository.save(course));
+    }
 }

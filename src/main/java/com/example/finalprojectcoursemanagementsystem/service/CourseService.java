@@ -83,16 +83,16 @@ public class CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
-        if(!course.isAvailable()){
+        if (!course.isAvailable()) {
             throw new NonAvailableCourseException("This course is not available!");
         }
-        if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
+        if (userRepository.isCourseAlreadyPurchased(user.getId(), courseId)) {
             throw new AlreadyEnrolledException("Already enrolled in this course!");
         }
-        if(user.equals(course.getCourseOwner())){
+        if (user.equals(course.getCourseOwner())) {
             throw new RuntimeException("You are the owner of this course!");
         }
-        if(user.getBalance() < course.getPrice()){
+        if (user.getBalance() < course.getPrice()) {
             throw new InsufficientBalanceException("Insufficient balance!");
         }
 
@@ -101,7 +101,11 @@ public class CourseService {
         owner.setBalance(owner.getBalance() + course.getPrice());
 
         course.addLearner(user);
+        setProgress(user, owner, course);
+    }
 
+    @Transactional
+    protected void setProgress(CourseUser user, CourseUser owner, Course course) {
         CourseProgress courseProgress = CourseProgress.builder()
                 .courseUser(user)
                 .course(course)
@@ -117,6 +121,9 @@ public class CourseService {
                     .courseUser(user)
                     .lesson(lesson)
                     .quizStarted(null)
+                    .attemptCount(0)
+                    .bestScore(0D)
+                    .attempts(new ArrayList<>())
                     .progress(ProgressEnum.NOT_STARTED).build();
             user.getLessonProgressList().add(lessonProgress);
             lessonProgressList.add(lessonProgress);
@@ -126,7 +133,6 @@ public class CourseService {
         lessonProgressRepository.saveAll(lessonProgressList);
         courseProgressRepository.save(courseProgress);
         userRepository.saveAll(List.of(user, owner));
-
     }
 
 

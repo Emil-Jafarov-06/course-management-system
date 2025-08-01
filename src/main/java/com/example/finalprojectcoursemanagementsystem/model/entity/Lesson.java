@@ -1,6 +1,5 @@
 package com.example.finalprojectcoursemanagementsystem.model.entity;
 
-import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;

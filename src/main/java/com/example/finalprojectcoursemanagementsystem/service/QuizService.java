@@ -64,33 +64,42 @@ public class QuizService {
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
 
-        if(!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
+        if (!userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
             throw new ForbiddenAccessException("You are not allowed to submit this quiz!");
         }
 
         LessonProgress progress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
-        if(progress.getQuizStarted() == null){
+        if (progress.getQuizStarted() == null) {
             throw new ForbiddenAccessException("Cannot submit quiz before starting it! Please try again later!");
         }
         LocalDateTime quizFinishTime = progress.getQuizStarted().plusMinutes(quiz.getDuration());
-        if(quizFinishTime.isBefore(LocalDateTime.now())){
+        if (quizFinishTime.isBefore(LocalDateTime.now())) {
             throw new ForbiddenAccessException("Cannot submit quiz after the quiz duration has expired! Please try again later!");
         }
+        Integer accurateResponses = getAccuracy(request, quiz);
+        return checkCorrectness(accurateResponses, userId, course, quiz);
+    }
+
+    protected Integer getAccuracy(QuizSubmitRequest request, Quiz quiz){
         int accurateResponses = 0;
         Map<Long, String> userResponses = request.getAnswers();
-        for(Question question : quiz.getQuestions()) {
+        for (Question question : quiz.getQuestions()) {
             String userAnswer = userResponses.get(question.getId());
-            if(userAnswer != null && userAnswer.equals(question.getCorrectVariant())) {
+            if (userAnswer != null && userAnswer.equals(question.getCorrectVariant())) {
                 accurateResponses++;
             }
         }
+        return accurateResponses;
+    }
 
+    @Transactional
+    protected String checkCorrectness(int accurateResponses, Long userId, Course course, Quiz quiz) {
+        String message;
         double correctness = (double) accurateResponses / quiz.getQuestions().size();
+        Lesson lesson = quiz.getLesson();
+        LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lesson.getId());
         if(correctness >= 0.75){
-            Lesson lesson = quiz.getLesson();
-            LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lesson.getId());
             lessonProgress.setProgress(ProgressEnum.COMPLETED);
-            lessonProgressRepository.save(lessonProgress);
             CourseProgress courseProgress = courseProgressRepository.findCourseProgressByCourse_IdAndCourseUser_Id(course.getId(), userId);
             courseProgress.setCompletedUnits(courseProgress.getCompletedUnits() + 1);
             if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
@@ -101,17 +110,26 @@ public class QuizService {
                         "Course Completion",
                         "You have successfully completed the course : " + course.getCourseName() + " by " + course.getCourseOwner().getUserName());
                 */
-                return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
+                message =  String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);
                 courseProgressRepository.save(courseProgress);
-                return String.format("Your score is %d out of %d. You successfully completed the lesson!", accurateResponses, quiz.getQuestions().size());
+                message = String.format("Your score is %d out of %d. You successfully completed the lesson!", accurateResponses, quiz.getQuestions().size());
             }
         } else{
-            return String.format("Your score is %d out of %d. You failed the lesson. Retake the quiz.", accurateResponses, quiz.getQuestions().size());
+            message = String.format("Your score is %d out of %d. You failed the lesson. Retake the quiz.", accurateResponses, quiz.getQuestions().size());
         }
 
+        lessonProgress.setAttemptCount((lessonProgress.getAttemptCount() == null ? 1 : lessonProgress.getAttemptCount()) + 1);
+        lessonProgress.setBestScore((lessonProgress.getBestScore() == null || correctness > lessonProgress.getBestScore()) ? correctness : lessonProgress.getBestScore());
+        Attempt attempt = new Attempt();
+        attempt.setScore(correctness);
+        lessonProgress.addAttempt(attempt);
+        lessonProgressRepository.save(lessonProgress);
+
+        return message;
     }
+
 
     @Transactional
     public QuizDTO createQuiz(Long userId, QuizCreateRequest request) {

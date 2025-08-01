@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Setter
@@ -30,5 +32,16 @@ public class LessonProgress {
     private ProgressEnum progress = ProgressEnum.NOT_STARTED;
 
     private LocalDateTime quizStarted;
+
+    private Integer attemptCount;
+    private Double bestScore;
+
+    @OneToMany(mappedBy = "lessonProgress", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Attempt> attempts = new ArrayList<>();
+
+    public void addAttempt(Attempt attempt) {
+        attempts.add(attempt);
+        attempt.setLessonProgress(this);
+    }
 
 }

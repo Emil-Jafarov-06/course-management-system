@@ -6,6 +6,8 @@ import com.example.finalprojectcoursemanagementsystem.model.request.LessonUpdate
 import com.example.finalprojectcoursemanagementsystem.model.response.InformationResponse;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.LessonService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +22,14 @@ import java.util.Locale;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/lessons")
+@Tag(name = "Lesson Controller", description = "Lesson related operations")
 public class LessonController {
 
     private final LessonService lessonService;
     private final MessageSource messageSource;
 
     @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Add lesson to course", description = "Adds a new lesson to the specified course. Only accessible by the course creator.")
     @PostMapping("/course/{id}/addLesson")
     public ResponseEntity<InformationResponse<LessonDTO>> addLesson(@PathVariable("id") @Positive Long courseId,
                                                                     @RequestBody @Valid LessonCreateRequest request,
@@ -38,6 +42,7 @@ public class LessonController {
     }
 
     @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Delete lesson", description = "Deletes a lesson by its ID. Only accessible by the course creator.")
     @DeleteMapping("/{lessonId}")
     public ResponseEntity<InformationResponse<String>> deleteLesson(@PathVariable @Positive Long lessonId,
                                                                     @RequestHeader(required = false) Locale locale) {
@@ -49,6 +54,7 @@ public class LessonController {
     }
 
     @PreAuthorize("hasRole('TEACHER')")
+    @Operation(summary = "Update lesson", description = "Updates an existing lesson by its ID. Only accessible by the course creator.")
     @PutMapping("/{lessonId}")
     public ResponseEntity<InformationResponse<LessonDTO>> updateLesson(@PathVariable @Positive Long lessonId,
                                                                        @RequestBody @Valid LessonUpdateRequest request,
@@ -60,6 +66,7 @@ public class LessonController {
                 lesson));
     }
 
+    @Operation(summary = "Get lesson by ID", description = "Retrieves the details of a specific lesson by its ID. Accessible to authorized users.")
     @GetMapping("/{lessonId}")
     public ResponseEntity<InformationResponse<LessonDTO>> getLesson(@PathVariable @Positive Long lessonId,
                                                                     @RequestHeader(required = false) Locale locale) {

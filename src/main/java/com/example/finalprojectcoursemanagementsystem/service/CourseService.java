@@ -58,7 +58,7 @@ public class CourseService {
     }
 
     public PageImplementation<CourseDTO> searchForCourses(@NotBlank String name, @PositiveOrZero int page) {
-        Page<Course> pagedCourses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase(name, PageRequest.of(page, 10));
+        Page<Course> pagedCourses = courseRepository.findCoursesByDescriptionLikeIgnoreCase(name, PageRequest.of(page, 10));
         Page<CourseDTO> pagedCoursesDto = pagedCourses.map(courseMapper::mapIntoDTO);
         return new PageImplementation<>(pagedCoursesDto);
     }

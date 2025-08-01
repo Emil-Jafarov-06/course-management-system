@@ -27,6 +27,15 @@ public class FilterConfiguration {
                 .cors(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui.html",           // Main UI page
+                                "/swagger-ui/**",             // Swagger UI static resources
+                                "/swagger-ui/index.html",     // Sometimes needed
+                                "/v3/api-docs/",               // Main OpenAPI JSON
+                                "/v3/api-docs/**",            // Optional path segments
+                                "/swagger-resources/**",      // Additional Swagger stuff
+                                "/webjars/**"                 // Swagger static files
+                        ).permitAll()
                         .requestMatchers("/sign/**").permitAll()
                         .anyRequest().authenticated()
                 )

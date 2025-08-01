@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<InformationResponse<String>> buildResponse(String messageKey, HttpStatus status, Locale locale) {
         String localizedMessage = messageSource.getMessage(messageKey, null, locale);
-        InformationResponse<String> response = new InformationResponse<>(false, localizedMessage, null);
+        InformationResponse<String> response = new InformationResponse<String>(false, localizedMessage, null);
         return new ResponseEntity<>(response, status);
     }
 
@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<InformationResponse<String>> handleValidationException(MethodArgumentNotValidException ex, Locale locale) {
         String errorMessage = Objects.requireNonNull(ex.getBindingResult().getFieldError()).getDefaultMessage();
-        return new ResponseEntity<>(new InformationResponse<>(false, errorMessage, null), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new InformationResponse<String>(false, errorMessage, null), HttpStatus.BAD_REQUEST);
     }
 
 }

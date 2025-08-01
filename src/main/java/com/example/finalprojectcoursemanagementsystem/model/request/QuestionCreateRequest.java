@@ -13,7 +13,7 @@ import lombok.*;
 public class QuestionCreateRequest {
 
     @NotBlank
-    String questionText;
+    private String questionText;
     @Pattern(regexp = "^[A-D]$")
     private String correctVariant;
     @NotBlank

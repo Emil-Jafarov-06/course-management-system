@@ -57,7 +57,8 @@ public class QuizController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @PutMapping("/{quizId}")
-    public ResponseEntity<QuizDTO> updateQuiz(@PathVariable Long quizId, @RequestBody QuizUpdateRequest request){
+    public ResponseEntity<QuizDTO> updateQuiz(@PathVariable Long quizId,
+                                              @RequestBody QuizUpdateRequest request){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(quizService.updateQuiz(securityUser.getCourseUser().getId(), quizId, request));
     }
@@ -72,7 +73,7 @@ public class QuizController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @DeleteMapping("/{quizId}")
-    public ResponseEntity<?> deleteQuiz(@PathVariable Long quizId){
+    public ResponseEntity<?> deleteQuiz(@PathVariable @Positive Long quizId){
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return ResponseEntity.ok(quizService.deleteQuiz(securityUser.getCourseUser().getId(), quizId));
     }

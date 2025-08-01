@@ -96,9 +96,11 @@ public class QuizService {
             if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
                 courseProgress.setProgress(ProgressEnum.COMPLETED);
                 courseProgressRepository.save(courseProgress);
+                /*
                 emailService.sendSimpleEmail(user.getEmail(),
                         "Course Completion",
                         "You have successfully completed the course : " + course.getCourseName() + " by " + course.getCourseOwner().getUserName());
+                */
                 return String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);
@@ -126,6 +128,7 @@ public class QuizService {
                 .lesson(lesson).build();
         lesson.setQuiz(quiz);
         Quiz savedQuiz = quizRepository.save(quiz);
+        lessonRepository.save(lesson);
         return quizMapper.mapIntoDTO(savedQuiz);
     }
 
@@ -141,7 +144,6 @@ public class QuizService {
         Question question = questionMapper.mapIntoEntity(request);
         quiz.getQuestions().add(question);
         question.setQuiz(quiz);
-        quizRepository.save(quiz);
         return questionMapper.mapIntoDTO(questionRepository.save(question));
 
     }
@@ -173,6 +175,7 @@ public class QuizService {
         return quizMapper.mapIntoDTO(savedQuiz);
     }
 
+    @Transactional
     public String deleteQuiz(Long id, Long quizId) {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));

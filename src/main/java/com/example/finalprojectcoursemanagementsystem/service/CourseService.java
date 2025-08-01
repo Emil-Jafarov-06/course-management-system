@@ -183,7 +183,9 @@ public class CourseService {
                 progress.setProgress(ProgressEnum.IN_PROGRESS);
                 lessonProgressRepository.save(progress);
                 lessonRepository.save(lesson);
-                return lessonMapper.mapIntoDTO(lesson);
+                LessonDTO lessonDTO = lessonMapper.mapIntoDTO(lesson);
+                lessonDTO.setQuizId(lesson.getQuiz().getId());
+                return lessonDTO;
             }
         }
         throw new RuntimeException("All lessons have been completed!");

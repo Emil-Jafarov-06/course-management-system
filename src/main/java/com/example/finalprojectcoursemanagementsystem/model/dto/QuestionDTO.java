@@ -12,9 +12,8 @@ import lombok.*;
 @AllArgsConstructor
 public class QuestionDTO {
 
-    Long id;
-    String questionText;
-    private Quiz quiz;
+    private Long id;
+    private String questionText;
     @JsonIgnore
     private String correctVariant;
     private String variantA;

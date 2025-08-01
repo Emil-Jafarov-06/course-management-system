@@ -14,16 +14,16 @@ import lombok.*;
 public class CourseProgress {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    CourseUser courseUser;
+    private CourseUser courseUser;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
-    Course course;
-    ProgressEnum progress = ProgressEnum.NOT_STARTED;
+    private Course course;
+    private ProgressEnum progress = ProgressEnum.NOT_STARTED;
 
-    int totalUnits;
-    int completedUnits;
+    private int totalUnits;
+    private int completedUnits;
 
 }

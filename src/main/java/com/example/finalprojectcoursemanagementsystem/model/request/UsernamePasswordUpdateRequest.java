@@ -12,12 +12,12 @@ import lombok.*;
 public class UsernamePasswordUpdateRequest {
 
     @NotBlank
-    String oldUsername;
+    private String oldUsername;
     @NotBlank
-    String newUsername;
+    private String newUsername;
     @NotBlank
-    String oldPassword;
+    private String oldPassword;
     @NotBlank
-    String newPassword;
+    private String newPassword;
 
 }

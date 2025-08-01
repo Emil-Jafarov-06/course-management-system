@@ -12,11 +12,11 @@ import lombok.*;
 public class LessonUpdateRequest {
 
     @NotBlank
-    private String lessonName;
+    private String name;
     @NotBlank
-    private String lessonDescription;
+    private String description;
     private String videoURL;
     @NotBlank
-    private String lessonText;
+    private String text;
 
 }

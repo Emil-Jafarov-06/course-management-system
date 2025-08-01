@@ -13,7 +13,7 @@ import lombok.*;
 public class QuestionDTO {
 
     private Long id;
-    private String questionText;
+    private String text;
     @JsonIgnore
     private String correctVariant;
     private String variantA;

@@ -17,10 +17,10 @@ public class Lesson {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String lessonName;
-    private String lessonDescription;
+    private String name;
+    private String description;
     private String videoURL;
-    private String lessonText;
+    private String text;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn
@@ -29,15 +29,5 @@ public class Lesson {
 
     @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private Quiz quiz;
-
-    public static LessonDTO mapIntoDTO(Lesson lesson){
-        return LessonDTO.builder()
-                .id(lesson.getId())
-                .lessonName(lesson.getLessonName())
-                .lessonDescription(lesson.getLessonDescription())
-                .lessonText(lesson.getLessonText())
-                .videoURL(lesson.getVideoURL())
-                .quizId(lesson.getQuiz().getId()).build();
-    }
 
 }

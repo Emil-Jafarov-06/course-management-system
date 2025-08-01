@@ -13,10 +13,10 @@ import lombok.*;
 public class CourseCreateRequest {
 
     @NotBlank
-    private String courseName;
+    private String name;
     @NotBlank
-    private String courseDescription;
+    private String description;
     @Positive
-    private Double coursePay;
+    private Double price;
 
 }

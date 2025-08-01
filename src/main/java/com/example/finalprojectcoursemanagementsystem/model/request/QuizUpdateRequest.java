@@ -10,7 +10,7 @@ import lombok.*;
 @AllArgsConstructor
 public class QuizUpdateRequest {
 
-    private String quizDescription;
+    private String description;
     private Integer duration;
 
 }

@@ -25,7 +25,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +52,7 @@ public class CourseService {
     }
 
     public CourseDTO getCourseByName(String courseName) {
-        Course course = courseRepository.findCourseByCourseNameIgnoreCase(courseName)
+        Course course = courseRepository.findCourseByNameIgnoreCase(courseName)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with name " + courseName));
         return courseMapper.mapIntoDTO(course);
     }
@@ -93,13 +92,13 @@ public class CourseService {
         if(user.equals(course.getCourseOwner())){
             throw new RuntimeException("You are the owner of this course!");
         }
-        if(user.getBalance() < course.getCoursePay()){
+        if(user.getBalance() < course.getPrice()){
             throw new InsufficientBalanceException("Insufficient balance!");
         }
 
-        user.setBalance(user.getBalance() - course.getCoursePay());
+        user.setBalance(user.getBalance() - course.getPrice());
         CourseUser owner = course.getCourseOwner();
-        owner.setBalance(owner.getBalance() + course.getCoursePay());
+        owner.setBalance(owner.getBalance() + course.getPrice());
 
         course.addLearner(user);
 
@@ -143,9 +142,9 @@ public class CourseService {
             throw new ForbiddenAccessException("You are not allowed to update this course!");
         }
 
-        course.setCourseName(courseUpdateRequest.getCourseName());
-        course.setCourseDescription(courseUpdateRequest.getCourseDescription());
-        course.setCoursePay(courseUpdateRequest.getCoursePay());
+        course.setName(courseUpdateRequest.getName());
+        course.setDescription(courseUpdateRequest.getDescription());
+        course.setPrice(courseUpdateRequest.getPrice());
 
         Course updatedCourse = courseRepository.save(course);
         return courseMapper.mapIntoDTO(updatedCourse);
@@ -195,9 +194,7 @@ public class CourseService {
         }
         List<Lesson> lessons = lessonRepository.findLessonsByCourse_Id(courseId);
         return lessons.stream()
-                .map(lesson -> {
-                    return new LessonResponseForInfo(lesson.getId(), lesson.getLessonName(), lesson.getLessonDescription());
-                })
+                .map(lesson -> new LessonResponseForInfo(lesson.getId(), lesson.getName(), lesson.getDescription()))
                 .collect(Collectors.toList());
     }
 

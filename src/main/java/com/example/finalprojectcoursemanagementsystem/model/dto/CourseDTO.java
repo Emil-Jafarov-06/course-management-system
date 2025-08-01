@@ -11,9 +11,9 @@ import lombok.*;
 public class CourseDTO {
 
     private Long id;
-    private String courseName;
-    private String courseDescription;
-    private Double coursePay;
+    private String name;
+    private String description;
+    private Double price;
     private Boolean available;
 
 }

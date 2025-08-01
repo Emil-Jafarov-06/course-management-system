@@ -15,7 +15,7 @@ import java.util.List;
 public class QuizDTO {
 
     private Long id;
-    private String quizDescription;
+    private String description;
     private Integer duration;
     private List<QuestionDTO> questions = new ArrayList<>();
 

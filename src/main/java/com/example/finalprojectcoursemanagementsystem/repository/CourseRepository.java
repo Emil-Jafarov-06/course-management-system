@@ -13,10 +13,10 @@ import java.util.Optional;
 
 public interface CourseRepository extends JpaRepository<Course, Long> {
 
-    List<Course> findCoursesByCourseDescriptionLikeIgnoreCase(String courseDescription);
+    List<Course> findCoursesByDescriptionLikeIgnoreCase(String courseDescription);
 
-    @Query(value = "SELECT c FROM Course c WHERE LOWER(c.courseDescription) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.isAvailable = true",
-            countQuery = "SELECT COUNT(c) FROM Course c WHERE LOWER(c.courseDescription) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.isAvailable = true")
+    @Query(value = "SELECT c FROM Course c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.available = true",
+            countQuery = "SELECT COUNT(c) FROM Course c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.available = true")
     Page<Course> findCoursesByCourseDescriptionLikeIgnoreCase(@Param("courseDescription") String courseDescription, Pageable pageable);
 
     List<Course> findCoursesByCourseOwner_Id(Long courseOwnerId);
@@ -25,5 +25,5 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
             countQuery = "SELECT COUNT(cu) FROM CourseUser cu JOIN cu.paidCourses c WHERE c.id = :id")
     Page<CourseUser> findEnrolledUsersByCourseId(@Param("id") Long courseId, Pageable pageable);
 
-    Optional<Course> findCourseByCourseNameIgnoreCase(String courseName);
+    Optional<Course> findCourseByNameIgnoreCase(String name);
 }

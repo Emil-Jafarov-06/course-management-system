@@ -59,9 +59,9 @@ public class LessonService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + lessonId));
         if(lesson.getCourse().getCourseOwner().getId().equals(id)){
-            lesson.setLessonName(request.getLessonName());
-            lesson.setLessonText(request.getLessonText());
-            lesson.setLessonDescription(request.getLessonDescription());
+            lesson.setName(request.getName());
+            lesson.setText(request.getText());
+            lesson.setDescription(request.getDescription());
             lesson.setVideoURL(request.getVideoURL());
             return lessonMapper.mapIntoDTO(lessonRepository.save(lesson));
         }

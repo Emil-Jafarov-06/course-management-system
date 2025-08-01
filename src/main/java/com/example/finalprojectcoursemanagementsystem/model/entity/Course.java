@@ -23,9 +23,9 @@ public class Course {
     private Long id;
 
     @Column(unique = true)
-    private String courseName;
-    private String courseDescription;
-    private Double coursePay;
+    private String name;
+    private String description;
+    private Double price;
     private boolean available;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
@@ -40,15 +40,6 @@ public class Course {
     @ManyToMany(mappedBy = "paidCourses", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JsonBackReference
     private List<CourseUser> enrolledUsers = new ArrayList<>();
-
-    public static CourseDTO mapIntoDTO(Course course) {
-        return CourseDTO.builder()
-                .id(course.getId())
-                .courseName(course.getCourseName())
-                .courseDescription(course.getCourseDescription())
-                .coursePay(course.getCoursePay())
-                .build();
-    }
 
     public void addLearner(CourseUser courseUser) {
         this.enrolledUsers.add(courseUser);

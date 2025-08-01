@@ -32,11 +32,4 @@ public class Quiz {
     @OneToMany(mappedBy = "quiz", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
-    public static QuizDTO mapIntoDTO(Quiz quiz){
-        return QuizDTO.builder()
-                .id(quiz.getId())
-                .quizDescription(quiz.getQuizDescription())
-                .duration(quiz.getDuration()).build();
-    }
-
 }

@@ -13,12 +13,12 @@ import org.hibernate.validator.constraints.URL;
 public class LessonCreateRequest {
 
     @NotBlank
-    private String lessonName;
+    private String name;
     @NotBlank
-    private String lessonDescription;
+    private String description;
     @URL
     private String videoURL;
     @NotBlank
-    private String lessonText;
+    private String text;
 
 }

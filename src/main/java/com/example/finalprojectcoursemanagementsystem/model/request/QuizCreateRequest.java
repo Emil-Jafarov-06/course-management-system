@@ -16,7 +16,7 @@ public class QuizCreateRequest {
     @Positive
     private Long lessonId;
     @NotBlank
-    private String quizDescription;
+    private String description;
     @Positive
     private Integer duration;
 

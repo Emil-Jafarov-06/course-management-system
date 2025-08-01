@@ -35,7 +35,7 @@ public class QuestionService {
         if(!question.getQuiz().getLesson().getCourse().getCourseOwner().getId().equals(userId)){
             throw new ForbiddenAccessException("Only the owner teacher can update question!");
         }
-        question.setQuestionText(request.getQuestionText());
+        question.setText(request.getText());
         question.setVariantA(request.getVariantA());
         question.setVariantB(request.getVariantB());
         question.setVariantC(request.getVariantC());

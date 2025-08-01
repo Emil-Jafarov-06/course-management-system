@@ -181,17 +181,15 @@ public class UserService {
         return pagedUsers.map(userMapper::toUserDTO);
     }
 
-    public String addNewAdmin(Long userId) {
+    public UserDTO addNewAdmin(Long userId) {
         CourseUser user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
         user.setRole(RoleEnum.ADMIN);
-        userRepository.save(user);
-        return "User with id " + userId + " has been set admin!";
+        return userMapper.toUserDTO(userRepository.save(user));
     }
 
-    public String takeAdminRoleFromUser(Long userId) {
+    public UserDTO takeAdminRoleFromUser(Long userId) {
         CourseUser user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
         user.setRole(RoleEnum.LEARNER);
-        userRepository.save(user);
-        return "Admin with id " + userId + " has been removed!";
+        return userMapper.toUserDTO(userRepository.save(user));
     }
 }

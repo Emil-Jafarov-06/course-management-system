@@ -14,6 +14,6 @@ public class CourseDTO {
     private String courseName;
     private String courseDescription;
     private Double coursePay;
-    private Boolean isAvailable;
+    private Boolean available;
 
 }

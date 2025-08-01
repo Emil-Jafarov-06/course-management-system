@@ -26,7 +26,7 @@ public class Course {
     private String courseName;
     private String courseDescription;
     private Double coursePay;
-    private boolean isAvailable;
+    private boolean available;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "course_owner_id")

@@ -26,6 +26,8 @@ public class CourseUser {
     @Column(unique = true)
     @NotBlank
     private String userName;
+
+    @Column(unique = true)
     @Email
     private String email;
 

@@ -4,6 +4,7 @@ import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.request.AccountDeleteRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.UsernamePasswordUpdateRequest;
+import com.example.finalprojectcoursemanagementsystem.model.response.InformationResponse;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import com.example.finalprojectcoursemanagementsystem.service.CourseService;
 import com.example.finalprojectcoursemanagementsystem.service.UserService;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class UserController {
 
     private final UserService userService;
     private final CourseService courseService;
+    private final MessageSource messageSource;
 
     @PreAuthorize("hasRole('ADMIN') || hasRole('HEAD_ADMIN')")
     @GetMapping("users/all")
@@ -37,91 +41,149 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN') || hasRole('HEAD_ADMIN')")
     @PutMapping("set/admin/{userId}")
-    public ResponseEntity<String> addNewAdmin(@PathVariable Long userId){
-        return ResponseEntity.ok(userService.addNewAdmin(userId));
+    public ResponseEntity<InformationResponse<UserDTO>> addNewAdmin(@PathVariable Long userId,
+                                                                    @RequestHeader(required = false) Locale locale){
+        UserDTO user = userService.addNewAdmin(userId);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.set.admin.add", null, locale),
+                user));
     }
 
     @PreAuthorize("hasRole('HEAD_ADMIN')")
     @DeleteMapping("set/admin/{userId}")
-    public ResponseEntity<String> deleteAdmin(@PathVariable Long userId){
-        return ResponseEntity.ok(userService.takeAdminRoleFromUser(userId));
+    public ResponseEntity<InformationResponse<UserDTO>> deleteAdmin(@PathVariable Long userId,
+                                                                   @RequestHeader(required = false) Locale locale){
+        UserDTO user = userService.takeAdminRoleFromUser(userId);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.set.admin.remove", null, locale),
+                user));
     }
 
     @GetMapping("users/name/{name}")
-    public ResponseEntity<UserDTO> getUserByName(@PathVariable @NotBlank String name) {
-        return ResponseEntity.ok(userService.getUserDTOByUserName(name));
+    public ResponseEntity<InformationResponse<UserDTO>> getUserByName(@PathVariable @NotBlank String name,
+                                                                      @RequestHeader(required = false) Locale locale) {
+        UserDTO user = userService.getUserDTOByUserName(name);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.get.byName", null, locale),
+                user));
     }
 
     @PreAuthorize("hasRole('TEACHER')")
     @GetMapping("/createdCourses")
-    public ResponseEntity<Page<CourseDTO>> getCreatedCourses(@RequestParam(defaultValue = "0") int page) {
+    public ResponseEntity<InformationResponse<Page<CourseDTO>>> getCreatedCourses(@RequestParam(defaultValue = "0") int page,
+                                                                                  @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getCreatedCourses(securityUser.getCourseUser().getId(), page));
+        Page<CourseDTO> courses = userService.getCreatedCourses(securityUser.getCourseUser().getId(), page);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("course.created.get", null, locale),
+                courses));
     }
 
-    @GetMapping("users/id/{id}")
-    public ResponseEntity<UserDTO> getUserInfo(@PathVariable @Positive Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("users/{id}")
+    public ResponseEntity<InformationResponse<UserDTO>> getUserInfo(@PathVariable @Positive Long id,
+                                                                    @RequestHeader(required = false) Locale locale) {
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.get.byId", null, locale),
+                user));
     }
 
     @GetMapping("/users/search/{nameLike}")
-    public ResponseEntity<Page<UserDTO>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name, @RequestParam(defaultValue = "0") @PositiveOrZero int page) {
-        return ResponseEntity.ok(userService.getUsersByNameLike(name, page));
+    public ResponseEntity<InformationResponse<Page<UserDTO>>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name,
+                                                                                 @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+                                                                                 @RequestHeader(required = false) Locale locale) {
+        Page<UserDTO> users = userService.getUsersByNameLike(name, page);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.search.byName", null, locale),
+                users));
     }
 
     @GetMapping("users/email/{email}")
-    public ResponseEntity<UserDTO> getUserByEmail(@PathVariable @Email String email) {
-        return ResponseEntity.ok(userService.getUserByUserEmail(email));
+    public ResponseEntity<InformationResponse<UserDTO>> getUserByEmail(@PathVariable @Email String email,
+                                                                       @RequestHeader(required = false) Locale locale) {
+        UserDTO user = userService.getUserByUserEmail(email);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.get.byEmail", null, locale),
+                user));
     }
 
     @GetMapping("/myAccount")
-    public ResponseEntity<UserDTO> getAccountInfo() {
+    public ResponseEntity<InformationResponse<UserDTO>> getAccountInfo(@RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getUserById(securityUser.getCourseUser().getId()));
+        UserDTO user = userService.getUserById(securityUser.getCourseUser().getId());
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.account.info", null, locale),
+                user));
     }
 
     @GetMapping("/purchasedCourses")
-    public ResponseEntity<Page<CourseDTO>> getPurchasedCourses(@RequestParam(defaultValue = "0") @PositiveOrZero int page) {
+    public ResponseEntity<InformationResponse<Page<CourseDTO>>> getPurchasedCourses(@RequestParam(defaultValue = "0") @PositiveOrZero int page,
+                                                                                    @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.getPurchasedCourses(securityUser.getCourseUser().getId(), page));
+        Page<CourseDTO> courses = userService.getPurchasedCourses(securityUser.getCourseUser().getId(), page);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("course.purchased.get", null, locale),
+                courses));
     }
 
     @PostMapping("register/{courseId}")
-    public ResponseEntity<String> registerForCourse(@PathVariable @Positive Long courseId) {
+    public ResponseEntity<InformationResponse<String>> registerForCourse(@PathVariable @Positive Long courseId,
+                                                                         @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         courseService.enrollForCourse(securityUser, courseId);
-        return ResponseEntity.ok("Enrolled for course " + courseId);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("course.register.success", null, locale),
+                "Course ID: " + courseId));
     }
 
     @PutMapping("/balance/increase/{amount}")
-    public ResponseEntity<String> increaseBalance(@PathVariable @Positive Double amount) {
+    public ResponseEntity<InformationResponse<String>> increaseBalance(@PathVariable @Positive Double amount,
+                                                                       @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok("Current balance: " + userService.increaseBalance(securityUser, amount));
+        Double newBalance = userService.increaseBalance(securityUser, amount);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.balance.increase", new Object[]{newBalance}, locale),
+                "New balance: " + newBalance));
     }
 
     @PutMapping("/balance/decrease/{amount}")
-    public ResponseEntity<String> decreaseBalance(@PathVariable @Positive Double amount) {
+    public ResponseEntity<InformationResponse<String>> decreaseBalance(@PathVariable @Positive Double amount,
+                                                                       @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok("Current balance: " + userService.decreaseBalance(securityUser, amount));
+        Double newBalance = userService.decreaseBalance(securityUser, amount);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.balance.decrease", new Object[]{newBalance}, locale),
+                "New balance: " + newBalance));
     }
 
     @PutMapping("/myAccount/email")
-    public ResponseEntity<UserDTO> updateEmail(@RequestBody @Email String email) {
+    public ResponseEntity<InformationResponse<UserDTO>> updateEmail(@RequestBody @Email String email,
+                                                                    @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.changeEmail(securityUser, email));
+        UserDTO user = userService.changeEmail(securityUser, email);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.email.update", null, locale),
+                user));
     }
 
     @PutMapping("/myAccount/unp")
-    public ResponseEntity<UserDTO> updateUsernamePassword(@RequestBody @Valid UsernamePasswordUpdateRequest request) {
+    public ResponseEntity<InformationResponse<UserDTO>> updateUsernamePassword(@RequestBody @Valid UsernamePasswordUpdateRequest request,
+                                                                               @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(userService.updateUsernamePassword(securityUser, request));
+        UserDTO user = userService.updateUsernamePassword(securityUser, request);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.unp.update", null, locale),
+                user));
     }
 
     @DeleteMapping("/myAccount")
-    public ResponseEntity<String> deleteMyAccount(@RequestBody @Valid AccountDeleteRequest request) {
+    public ResponseEntity<InformationResponse<String>> deleteMyAccount(@RequestBody @Valid AccountDeleteRequest request,
+                                                                       @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteAccount(securityUser, request);
-        return ResponseEntity.ok("Account deleted!");
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("user.account.delete", null, locale),
+                null));
     }
 
 }

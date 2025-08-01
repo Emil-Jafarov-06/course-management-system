@@ -9,6 +9,7 @@ import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptio
 import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
+import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
@@ -24,6 +25,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -56,18 +58,10 @@ public class CourseService {
         return courseMapper.mapIntoDTO(course);
     }
 
-    /*
-    public List<CourseDTO> searchForCourses(String courseName) {
-        List<Course> courses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase("%" + courseName + "%");
-        return courses.stream()
-                .map(courseMapper::mapIntoDTO)
-                .collect(Collectors.toList());
-    }
-     */
-
-    public Page<CourseDTO> searchForCourses(@NotBlank String name, @PositiveOrZero int page) {
+    public PageImplementation<CourseDTO> searchForCourses(@NotBlank String name, @PositiveOrZero int page) {
         Page<Course> pagedCourses = courseRepository.findCoursesByCourseDescriptionLikeIgnoreCase(name, PageRequest.of(page, 10));
-        return pagedCourses.map(courseMapper::mapIntoDTO);
+        Page<CourseDTO> pagedCoursesDto = pagedCourses.map(courseMapper::mapIntoDTO);
+        return new PageImplementation<>(pagedCoursesDto);
     }
 
     @Transactional
@@ -75,7 +69,7 @@ public class CourseService {
         CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
                 .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId()));
         Course course = courseMapper.mapIntoEntity(courseCreateRequest);
-        course.setIsAvailable(false);
+        course.setAvailable(false);
         user.createCourse(course);
         course.setCourseOwner(user);
         Course savedCourse = courseRepository.save(course);
@@ -90,7 +84,7 @@ public class CourseService {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
 
-        if(course.getIsAvailable() == false){
+        if(!course.isAvailable()){
             throw new NonAvailableCourseException("This course is not available!");
         }
         if(userRepository.isCourseAlreadyPurchased(user.getId(), courseId)){
@@ -158,9 +152,10 @@ public class CourseService {
 
     }
 
-    public Page<CourseDTO> getCoursesFromTeacher(Long id, int page) {
+    public PageImplementation<CourseDTO> getCoursesFromTeacher(Long id, int page) {
         Page<Course> courses = userRepository.findCoursesCreatedById(id, PageRequest.of(page, 10));
-        return courses.map(courseMapper::mapIntoDTO);
+        Page<CourseDTO> pagedCourses = courses.map(courseMapper::mapIntoDTO);
+        return new PageImplementation<>(pagedCourses);
     }
 
     @Transactional
@@ -207,25 +202,25 @@ public class CourseService {
     }
 
     @Transactional
-    public Page<UserDTO> getEnrolledUsers(Long userId, Long courseId, @PositiveOrZero int page) {
+    public PageImplementation<UserDTO> getEnrolledUsers(Long userId, Long courseId, @PositiveOrZero int page) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!course.getCourseOwner().getId().equals(userId)){
             throw new ForbiddenAccessException("Only the owner teacher can view enrolled users!");
         }
         Page<CourseUser> pagedUsers = courseRepository.findEnrolledUsersByCourseId(courseId, PageRequest.of(page, 10));
-        return pagedUsers.map(userMapper::toUserDTO);
+        Page<UserDTO> pagedUsersDto=  pagedUsers.map(userMapper::toUserDTO);
+        return new PageImplementation<>(pagedUsersDto);
     }
 
     @Transactional
-    public CourseDTO setCourseAvailable(Long userId, Long courseId) {
+    public CourseDTO setCourseAvailability(Long userId, Long courseId, boolean available) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
         if(!course.getCourseOwner().getId().equals(userId)){
             throw new ForbiddenAccessException("Only the owner teacher can modify the course availability status!");
         }
-        course.setIsAvailable(true);
-        courseRepository.save(course);
+        course.setAvailable(available);
         return courseMapper.mapIntoDTO(courseRepository.save(course));
     }
 }

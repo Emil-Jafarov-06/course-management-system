@@ -28,7 +28,7 @@ public class GlobalExceptionHandler {
         InformationResponse<String> response = new InformationResponse<String>(false, localizedMessage, null);
         return new ResponseEntity<>(response, status);
     }
-
+/*
     @ExceptionHandler(Exception.class)
     public ResponseEntity<InformationResponse<String>> handleException(Exception exception, Locale locale) {
         return buildResponse("internal.error", HttpStatus.INTERNAL_SERVER_ERROR, locale);
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<InformationResponse<String>> handleRuntimeException(RuntimeException exception, Locale locale) {
         return buildResponse("internal.error", HttpStatus.INTERNAL_SERVER_ERROR, locale);
     }
-
+ */
     @ExceptionHandler(AlreadyEnrolledException.class)
     public ResponseEntity<InformationResponse<String>> handleAlreadyEnrolledException(AlreadyEnrolledException ex, Locale locale) {
         return buildResponse("already.enrolled", HttpStatus.CONFLICT, locale);

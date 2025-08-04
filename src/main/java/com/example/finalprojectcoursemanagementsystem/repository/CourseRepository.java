@@ -15,7 +15,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     List<Course> findCoursesByDescriptionLikeIgnoreCase(String courseDescription);
 
-    @Query(value = "SELECT c FROM Course c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.available = true",
+    @Query(value = "SELECT c FROM Course c WHERE LOWER(c.description) ILIKE LOWER(:courseDescription) AND c.available = true",
             countQuery = "SELECT COUNT(c) FROM Course c WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :courseDescription, '%')) AND c.available = true")
     Page<Course> findCoursesByDescriptionLikeIgnoreCase(@Param("courseDescription") String courseDescription, Pageable pageable);
 

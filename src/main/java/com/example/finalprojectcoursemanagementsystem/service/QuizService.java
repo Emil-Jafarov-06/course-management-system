@@ -142,7 +142,7 @@ public class QuizService {
         }
         Quiz quiz = Quiz.builder()
                 .duration(request.getDuration())
-                .quizDescription(request.getDescription())
+                .description(request.getDescription())
                 .lesson(lesson).build();
         lesson.setQuiz(quiz);
         Quiz savedQuiz = quizRepository.save(quiz);
@@ -188,7 +188,7 @@ public class QuizService {
             throw new ForbiddenAccessException("Only owner teachers modify quizzes!");
         }
         quiz.setDuration(request.getDuration());
-        quiz.setQuizDescription(request.getDescription());
+        quiz.setDescription(request.getDescription());
         Quiz savedQuiz = quizRepository.save(quiz);
         return quizMapper.mapIntoDTO(savedQuiz);
     }

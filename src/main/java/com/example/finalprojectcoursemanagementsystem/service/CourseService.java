@@ -58,7 +58,7 @@ public class CourseService {
     }
 
     public PageImplementation<CourseDTO> searchForCourses(@NotBlank String name, @PositiveOrZero int page) {
-        Page<Course> pagedCourses = courseRepository.findCoursesByDescriptionLikeIgnoreCase(name, PageRequest.of(page, 10));
+        Page<Course> pagedCourses = courseRepository.findCoursesByDescriptionLikeIgnoreCase("%" + name + "%", PageRequest.of(page, 10));
         Page<CourseDTO> pagedCoursesDto = pagedCourses.map(courseMapper::mapIntoDTO);
         return new PageImplementation<>(pagedCoursesDto);
     }
@@ -114,7 +114,6 @@ public class CourseService {
                 .totalUnits(course.getLessons().size()).build();
         user.getCourseProgressList().add(courseProgress);
 
-
         List<LessonProgress> lessonProgressList = new ArrayList<>();
         for(Lesson lesson : course.getLessons()) {
             LessonProgress lessonProgress = LessonProgress.builder()
@@ -128,7 +127,6 @@ public class CourseService {
             user.getLessonProgressList().add(lessonProgress);
             lessonProgressList.add(lessonProgress);
         }
-
 
         lessonProgressRepository.saveAll(lessonProgressList);
         courseProgressRepository.save(courseProgress);
@@ -184,7 +182,9 @@ public class CourseService {
                 lessonProgressRepository.save(progress);
                 lessonRepository.save(lesson);
                 LessonDTO lessonDTO = lessonMapper.mapIntoDTO(lesson);
-                lessonDTO.setQuizId(lesson.getQuiz().getId());
+                if(lessonDTO.getQuizId() != null){
+                    lessonDTO.setQuizId(lesson.getQuiz().getId());
+                }
                 return lessonDTO;
             }
         }

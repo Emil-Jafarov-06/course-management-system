@@ -6,6 +6,7 @@ import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
+import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
@@ -65,14 +66,16 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public Page<CourseDTO> getPurchasedCourses(Long userId, int page){
+    public PageImplementation<CourseDTO> getPurchasedCourses(Long userId, int page){
         Page<Course> pagedCourses = userRepository.findPurchasedCoursesById(userId, PageRequest.of(page, 10));
-        return pagedCourses.map(courseMapper::mapIntoDTO);
+        Page<CourseDTO> pagedCoursesDto = pagedCourses.map(courseMapper::mapIntoDTO);
+        return new PageImplementation<>(pagedCoursesDto);
     }
 
-    public Page<CourseDTO> getCreatedCourses(Long userId, int page){
+    public PageImplementation<CourseDTO> getCreatedCourses(Long userId, int page){
         Page<Course> pagedCourses = userRepository.findCoursesCreatedById(userId, PageRequest.of(page, 10));
-        return pagedCourses.map(courseMapper::mapIntoDTO);
+        Page<CourseDTO> pagedCoursesDto = pagedCourses.map(courseMapper::mapIntoDTO);
+        return new PageImplementation<>(pagedCoursesDto);
     }
 
     @Transactional
@@ -147,9 +150,10 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public Page<UserDTO> getUsersByNameLike(@NotBlank String name, @PositiveOrZero int page) {
+    public PageImplementation<UserDTO> getUsersByNameLike(@NotBlank String name, @PositiveOrZero int page) {
         Page<CourseUser> pagedUsers = userRepository.findCourseUsersByUserNameLikeIgnoreCase("%" + name + "%" , PageRequest.of(page, 10));
-        return pagedUsers.map(userMapper::toUserDTO);
+        Page<UserDTO> pagedUsersDto = pagedUsers.map(userMapper::toUserDTO);
+        return new PageImplementation<>(pagedUsersDto);
     }
 
     public UserDTO addNewAdmin(Long userId) {

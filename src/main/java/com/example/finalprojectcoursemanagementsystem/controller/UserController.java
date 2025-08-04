@@ -1,5 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 
+import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.request.AccountDeleteRequest;
@@ -17,7 +18,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -77,11 +77,11 @@ public class UserController {
 
     @PreAuthorize("hasRole('TEACHER')")
     @Operation(summary = "Get courses user created", description = "Retrieves the list of courses that a user has created. Only accessible by teachers.")
-    @GetMapping("/createdCourses")
-    public ResponseEntity<InformationResponse<Page<CourseDTO>>> getCreatedCourses(@RequestParam(defaultValue = "0") int page,
-                                                                                  @RequestHeader(required = false) Locale locale) {
+    @GetMapping("/created_courses")
+    public ResponseEntity<InformationResponse<PageImplementation<CourseDTO>>> getCreatedCourses(@RequestParam(defaultValue = "0") int page,
+                                                                                                @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Page<CourseDTO> courses = userService.getCreatedCourses(securityUser.getCourseUser().getId(), page);
+        PageImplementation<CourseDTO> courses = userService.getCreatedCourses(securityUser.getCourseUser().getId(), page);
         return ResponseEntity.ok(new InformationResponse<>(true,
                 messageSource.getMessage("course.created.get", null, locale),
                 courses));
@@ -99,10 +99,10 @@ public class UserController {
 
     @Operation(summary = "Search for user", description = "Retrieves all the users having username alike the inserted name.")
     @GetMapping("/users/search/{nameLike}")
-    public ResponseEntity<InformationResponse<Page<UserDTO>>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name,
+    public ResponseEntity<InformationResponse<PageImplementation<UserDTO>>> getUsersByNameLike(@PathVariable(name = "nameLike") @NotBlank String name,
                                                                                  @RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                                                                  @RequestHeader(required = false) Locale locale) {
-        Page<UserDTO> users = userService.getUsersByNameLike(name, page);
+        PageImplementation<UserDTO> users = userService.getUsersByNameLike(name, page);
         return ResponseEntity.ok(new InformationResponse<>(true,
                 messageSource.getMessage("user.search.byName", null, locale),
                 users));
@@ -119,7 +119,7 @@ public class UserController {
     }
 
     @Operation(summary = "Get my account info", description = "Retrieves the account info of the logged in user.")
-    @GetMapping("/myAccount")
+    @GetMapping("/my_account")
     public ResponseEntity<InformationResponse<UserDTO>> getAccountInfo(@RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         UserDTO user = userService.getUserById(securityUser.getCourseUser().getId());
@@ -129,11 +129,11 @@ public class UserController {
     }
 
     @Operation(summary = "Get purchased courses", description = "Retrieves the list of courses that the logged-in user has purchased.")
-    @GetMapping("/purchasedCourses")
-    public ResponseEntity<InformationResponse<Page<CourseDTO>>> getPurchasedCourses(@RequestParam(defaultValue = "0") @PositiveOrZero int page,
+    @GetMapping("/purchased_courses")
+    public ResponseEntity<InformationResponse<PageImplementation<CourseDTO>>> getPurchasedCourses(@RequestParam(defaultValue = "0") @PositiveOrZero int page,
                                                                                     @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Page<CourseDTO> courses = userService.getPurchasedCourses(securityUser.getCourseUser().getId(), page);
+        PageImplementation<CourseDTO> courses = userService.getPurchasedCourses(securityUser.getCourseUser().getId(), page);
         return ResponseEntity.ok(new InformationResponse<>(true,
                 messageSource.getMessage("course.purchased.get", null, locale),
                 courses));
@@ -173,7 +173,7 @@ public class UserController {
     }
 
     @Operation(summary = "Update email", description = "Updates the email of the logged-in user.")
-    @PutMapping("/myAccount/email")
+    @PutMapping("/my_account/email")
     public ResponseEntity<InformationResponse<UserDTO>> updateEmail(@RequestBody @Email String email,
                                                                     @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -184,7 +184,7 @@ public class UserController {
     }
 
     @Operation(summary = "Update username and password", description = "Updates the username and password of the logged-in user.")
-    @PutMapping("/myAccount/unp")
+    @PutMapping("/my_account/unp")
     public ResponseEntity<InformationResponse<UserDTO>> updateUsernamePassword(@RequestBody @Valid UsernamePasswordUpdateRequest request,
                                                                                @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -195,12 +195,12 @@ public class UserController {
     }
 
     @Operation(summary = "Delete my account", description = "Deletes the account of the currently logged-in user. Requires confirmation via password.")
-    @DeleteMapping("/myAccount")
+    @DeleteMapping("/my_account")
     public ResponseEntity<InformationResponse<String>> deleteMyAccount(@RequestBody @Valid AccountDeleteRequest request,
                                                                        @RequestHeader(required = false) Locale locale) {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         userService.deleteAccount(securityUser, request);
-        return ResponseEntity.ok(new InformationResponse<String>(true,
+        return ResponseEntity.ok(new InformationResponse<>(true,
                 messageSource.getMessage("user.account.delete", null, locale),
                 null));
     }

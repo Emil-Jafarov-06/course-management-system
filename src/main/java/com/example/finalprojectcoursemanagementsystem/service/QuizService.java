@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +43,14 @@ public class QuizService {
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
         Course course = quiz.getLesson().getCourse();
+        LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
 
-        if(userRepository.isCourseAlreadyPurchased(userId, course.getId())) {
-            LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, quiz.getLesson().getId());
+        if(userRepository.isCourseAlreadyPurchased(userId, course.getId())
+                && Objects.nonNull(lessonProgress)
+                && lessonProgress.getProgress() != ProgressEnum.NOT_STARTED) {
+
             lessonProgress.setQuizStarted(LocalDateTime.now());
             lessonProgressRepository.save(lessonProgress);
-
             return quizMapper.mapIntoDTO(quiz);
         }
         if(course.getCourseOwner().getId().equals(userId)) {
@@ -120,6 +123,7 @@ public class QuizService {
 
         lessonProgress.setAttemptCount((lessonProgress.getAttemptCount() == null ? 1 : lessonProgress.getAttemptCount()) + 1);
         lessonProgress.setBestScore((lessonProgress.getBestScore() == null || correctness > lessonProgress.getBestScore()) ? correctness : lessonProgress.getBestScore());
+        lessonProgress.setQuizStarted(null);
         Attempt attempt = new Attempt();
         attempt.setScore(correctness);
         lessonProgress.addAttempt(attempt);

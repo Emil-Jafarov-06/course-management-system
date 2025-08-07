@@ -2,6 +2,7 @@ package com.example.finalprojectcoursemanagementsystem.controller;
 
 import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.CourseRatingDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
@@ -13,9 +14,7 @@ import com.example.finalprojectcoursemanagementsystem.service.CourseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
@@ -150,4 +149,15 @@ public class CourseController {
                 courses));
     }
 
+    @Operation(summary = "Rates the course", description = "Adds a new rating for a course and retrieves the average rating of the course.")
+    @PostMapping("/rate/{id}")
+    public ResponseEntity<InformationResponse<CourseRatingDTO>> rateCourse(@PathVariable @Positive Long id,
+                                                                           @RequestHeader(required = false) Locale locale,
+                                                                           @RequestBody @Min(0) @Max(5) Double rating){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CourseRatingDTO courseRatingDTO = courseService.rateCourse(securityUser, id, rating);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("course.rated", null, locale),
+                courseRatingDTO));
+    }
 }

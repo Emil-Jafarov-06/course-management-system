@@ -41,6 +41,10 @@ public class Course {
     @JsonBackReference
     private List<CourseUser> enrolledUsers = new ArrayList<>();
 
+    @OneToMany(mappedBy = "course", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
+    private List<CourseRating> ratings = new ArrayList<>();
+
     public void addLearner(CourseUser courseUser) {
         this.enrolledUsers.add(courseUser);
         courseUser.enrollCourse(this);

@@ -11,6 +11,7 @@ import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
 import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.CourseRatingDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
@@ -21,8 +22,7 @@ import com.example.finalprojectcoursemanagementsystem.model.response.LessonRespo
 import com.example.finalprojectcoursemanagementsystem.repository.*;
 import com.example.finalprojectcoursemanagementsystem.security.SecurityUser;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,6 +45,7 @@ public class CourseService {
     private final UserMapper userMapper;
     private final CourseMapper courseMapper;
     private final LessonMapper lessonMapper;
+    private final CourseRatingRepository courseRatingRepository;
 
     public CourseDTO getCourseById(Long id) {
         Course course = courseRepository.findById(id)
@@ -226,5 +228,36 @@ public class CourseService {
         }
         course.setAvailable(available);
         return courseMapper.mapIntoDTO(courseRepository.save(course));
+    }
+
+    @Transactional
+    public CourseRatingDTO rateCourse(SecurityUser securityUser, Long courseId, Double rating) {
+        CourseUser user = userRepository.findById(securityUser.getCourseUser().getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + securityUser.getCourseUser().getId()));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
+
+        if (!courseProgressRepository.findCourseProgressByCourse_IdAndCourseUser_Id(courseId, user.getId()).getProgress().equals(ProgressEnum.COMPLETED)) {
+            throw new ForbiddenAccessException("Only users who have completed the course can rate it!");
+        }
+        if(course.getCourseOwner().getId().equals(user.getId())){
+            throw new ForbiddenAccessException("You cannot rate your own course!");
+        }
+        Optional<CourseRating> existingRating = courseRatingRepository.findByUser_IdAndCourse_Id(user.getId(), course.getId());
+        if (existingRating.isPresent()) {
+            throw new ForbiddenAccessException("You have already rated this course!");
+        }
+
+        CourseRating courseRating = CourseRating.builder()
+                .rating(rating)
+                .course(course)
+                .user(user)
+                .build();
+        courseRatingRepository.save(courseRating);
+
+        Double averageRating = courseRatingRepository.calculateAverageRating(courseId);
+        Long raterCount = courseRatingRepository.countCourseRatingsByCourse_Id(courseId);
+        
+        return new CourseRatingDTO(courseId, averageRating, raterCount);
     }
 }

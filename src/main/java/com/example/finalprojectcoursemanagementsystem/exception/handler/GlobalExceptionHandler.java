@@ -1,9 +1,6 @@
 package com.example.finalprojectcoursemanagementsystem.exception.handler;
 
-import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.AlreadyEnrolledException;
-import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.ForbiddenAccessException;
-import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.IncorrectUsernamePasswordException;
-import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.InsufficientBalanceException;
+import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.*;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.*;
 import com.example.finalprojectcoursemanagementsystem.model.response.InformationResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +36,12 @@ public class GlobalExceptionHandler {
         return buildResponse("internal.error", HttpStatus.INTERNAL_SERVER_ERROR, locale);
     }
  */
+
+    @ExceptionHandler(NonAvailableCourseException.class)
+    public ResponseEntity<InformationResponse<String>> handleNonAvailableCourseException(NonAvailableCourseException ex, Locale locale) {
+        return buildResponse("non.available.course", HttpStatus.CONFLICT, locale);
+    }
+
     @ExceptionHandler(AlreadyEnrolledException.class)
     public ResponseEntity<InformationResponse<String>> handleAlreadyEnrolledException(AlreadyEnrolledException ex, Locale locale) {
         return buildResponse("already.enrolled", HttpStatus.CONFLICT, locale);

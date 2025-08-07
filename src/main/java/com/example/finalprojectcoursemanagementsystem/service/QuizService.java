@@ -77,7 +77,7 @@ public class QuizService {
             throw new ForbiddenAccessException("Cannot submit quiz after the quiz duration has expired! Please try again later!");
         }
         Integer accurateResponses = getAccuracy(request, quiz);
-        return checkCorrectness(accurateResponses, userId, course, quiz);
+        return checkCorrectness(user, accurateResponses, userId, course, quiz);
     }
 
     protected Integer getAccuracy(QuizSubmitRequest request, Quiz quiz){
@@ -93,7 +93,7 @@ public class QuizService {
     }
 
     @Transactional
-    protected String checkCorrectness(int accurateResponses, Long userId, Course course, Quiz quiz) {
+    protected String checkCorrectness(CourseUser user, int accurateResponses, Long userId, Course course, Quiz quiz) {
         String message;
         double correctness = (double) accurateResponses / quiz.getQuestions().size();
         Lesson lesson = quiz.getLesson();
@@ -105,11 +105,9 @@ public class QuizService {
             if(courseProgress.getCompletedUnits() == courseProgress.getTotalUnits()){
                 courseProgress.setProgress(ProgressEnum.COMPLETED);
                 courseProgressRepository.save(courseProgress);
-                /*
                 emailService.sendSimpleEmail(user.getEmail(),
                         "Course Completion",
-                        "You have successfully completed the course : " + course.getCourseName() + " by " + course.getCourseOwner().getUserName());
-                */
+                        "You have successfully completed the course : " + course.getName() + " by " + course.getCourseOwner().getUserName());
                 message =  String.format("Your score is %d out of %d. You successfully completed the lesson and the course!\n Please check your email.", accurateResponses, quiz.getQuestions().size());
             } else{
                 courseProgress.setProgress(ProgressEnum.IN_PROGRESS);

@@ -182,9 +182,10 @@ public class CourseService {
                 lessonProgressRepository.save(progress);
                 lessonRepository.save(lesson);
                 LessonDTO lessonDTO = lessonMapper.mapIntoDTO(lesson);
-                if(lessonDTO.getQuizId() != null){
+                if(lesson.getQuiz() != null){
                     lessonDTO.setQuizId(lesson.getQuiz().getId());
                 }
+                System.out.println(lessonDTO);
                 return lessonDTO;
             }
         }

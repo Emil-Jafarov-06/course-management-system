@@ -38,10 +38,6 @@ public class CourseUser {
 
     private RoleEnum role;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch =  FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn
-    private UserProfile userProfile;
-
     // Only available for teachers
     @OneToMany(mappedBy = "courseOwner", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference

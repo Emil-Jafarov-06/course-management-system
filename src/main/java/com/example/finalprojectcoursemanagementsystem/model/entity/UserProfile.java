@@ -2,7 +2,7 @@ package com.example.finalprojectcoursemanagementsystem.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+/*
 @Entity
 @Setter
 @Getter
@@ -23,3 +23,4 @@ public class UserProfile {
     private CourseUser user;
 
 }
+*/

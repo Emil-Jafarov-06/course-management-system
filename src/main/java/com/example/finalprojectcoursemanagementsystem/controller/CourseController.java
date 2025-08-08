@@ -165,7 +165,7 @@ public class CourseController {
         SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         CourseProgressDTO courseProgressDTO = courseService.getCourseProgress(securityUser.getCourseUser().getId(), courseId);
         return ResponseEntity.ok(new InformationResponse<>(true,
-                messageSource.getMessage("course.progress", null, locale),
+                null,
                 courseProgressDTO));
     }
 

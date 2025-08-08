@@ -7,9 +7,12 @@ import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Course;
 import com.example.finalprojectcoursemanagementsystem.model.entity.Lesson;
+import com.example.finalprojectcoursemanagementsystem.model.entity.LessonProgress;
+import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.LessonUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.repository.CourseRepository;
+import com.example.finalprojectcoursemanagementsystem.repository.LessonProgressRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.LessonRepository;
 import com.example.finalprojectcoursemanagementsystem.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -24,6 +27,7 @@ public class LessonService {
     private  final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final LessonMapper lessonMapper;
+    private final LessonProgressRepository lessonProgressRepository;
 
     @Transactional
     public LessonDTO addLesson(Long id, Long courseId, LessonCreateRequest request) {
@@ -46,11 +50,21 @@ public class LessonService {
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new LessonNotFoundException("Lesson not found with id " + lessonId));
         Course course = lesson.getCourse();
-        if(userRepository.isCourseAlreadyPurchased(userId, course.getId()) || course.getCourseOwner().getId().equals(userId)){
-            return lessonMapper.mapIntoDTO(lesson);
-        } else {
+        boolean isEnrolled = userRepository.isCourseAlreadyPurchased(userId, course.getId());
+
+        if(!course.getCourseOwner().getId().equals(userId) && !isEnrolled){
             throw new ForbiddenAccessException("Only the owner teacher and enrolled users can view lesson!");
         }
+        if(isEnrolled){
+            LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lessonId);
+            lessonProgress.setProgress(ProgressEnum.IN_PROGRESS);
+            lessonProgressRepository.save(lessonProgress);
+        }
+        LessonDTO lessonDTO = lessonMapper.mapIntoDTO(lesson);
+        if(lesson.getQuiz() != null){
+            lessonDTO.setQuizId(lesson.getQuiz().getId());
+        }
+        return lessonDTO;
     }
 
     @Transactional
@@ -63,7 +77,11 @@ public class LessonService {
             lesson.setText(request.getText());
             lesson.setDescription(request.getDescription());
             lesson.setVideoURL(request.getVideoURL());
-            return lessonMapper.mapIntoDTO(lessonRepository.save(lesson));
+            LessonDTO lessonDTO = lessonMapper.mapIntoDTO(lessonRepository.save(lesson));
+            if(lesson.getQuiz() != null){
+                lessonDTO.setQuizId(lesson.getQuiz().getId());
+            }
+            return lessonDTO;
         }
         throw new ForbiddenAccessException("Only the owner teacher can update lesson!");
 

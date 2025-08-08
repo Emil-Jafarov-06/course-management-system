@@ -184,7 +184,6 @@ public class CourseService {
                 if(lesson.getQuiz() != null){
                     lessonDTO.setQuizId(lesson.getQuiz().getId());
                 }
-                System.out.println(lessonDTO);
                 return lessonDTO;
             }
         }

@@ -1,7 +1,9 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 
+import com.example.finalprojectcoursemanagementsystem.model.dto.AttemptDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
+import com.example.finalprojectcoursemanagementsystem.model.entity.Attempt;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuestionCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.QuizSubmitRequest;
@@ -20,6 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Locale;
 @RestController
 @RequiredArgsConstructor
@@ -113,6 +116,17 @@ public class QuizController {
         return ResponseEntity.ok(new InformationResponse<>(true,
                 messageSource.getMessage("quiz.delete.success", null, locale),
                 message));
+    }
+
+    @Operation(summary = "Get quiz attempts", description = "Gets all the quiz attempts for a quiz.")
+    @GetMapping("/{quizId}/attempts")
+    public ResponseEntity<InformationResponse<List<AttemptDTO>>> getQuizAttempts(@PathVariable @Positive Long quizId,
+                                                                              @RequestHeader(required = false) Locale locale) {
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<AttemptDTO> attempts = quizService.getQuizAttempts(securityUser.getCourseUser().getId(), quizId);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("quiz.attempts", null, locale),
+                attempts));
     }
 
 }

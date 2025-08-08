@@ -23,7 +23,7 @@ public class CourseProgress {
     private Course course;
     private ProgressEnum progress = ProgressEnum.NOT_STARTED;
 
-    private int totalUnits;
-    private int completedUnits;
+    private Integer totalUnits;
+    private Integer completedUnits;
 
 }

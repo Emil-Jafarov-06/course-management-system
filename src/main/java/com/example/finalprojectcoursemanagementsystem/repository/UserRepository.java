@@ -31,11 +31,11 @@ public interface UserRepository extends JpaRepository<CourseUser, Long> {
     ORDER BY AVG(r.rating) DESC
    \s""",
             countQuery = """
-    SELECT COUNT(DISTINCT c) FROM CourseUser cu 
-    JOIN cu.paidCourses c 
+    SELECT COUNT(DISTINCT c) FROM CourseUser cu\s
+    JOIN cu.paidCourses c\s
     WHERE cu.id = :id
-    """)
-    Page<Course> findPurchasedCoursesById(Long id, Pageable pageable);
+   \s""")
+    Page<Course> findPurchasedCoursesById(@Param("id") Long id, Pageable pageable);
 
     @Query("SELECT COUNT(c) > 0 FROM CourseUser cu JOIN cu.paidCourses c WHERE cu.id = :userId AND c.id = :courseId")
     Boolean isCourseAlreadyPurchased(@Param("userId") Long userId, @Param("courseId") Long courseId);
@@ -50,10 +50,10 @@ public interface UserRepository extends JpaRepository<CourseUser, Long> {
     ORDER BY AVG(r.rating) DESC
    \s""",
             countQuery = """
-    SELECT COUNT(c) FROM CourseUser cu 
-    JOIN cu.coursesCreated c 
+    SELECT COUNT(c) FROM CourseUser cu\s
+    JOIN cu.coursesCreated c\s
     WHERE cu.id = :id
-    """)
-    Page<Course> findCoursesCreatedById(Long id, Pageable pageable);
+   \s""")
+    Page<Course> findCoursesCreatedById(@Param("id") Long id, Pageable pageable);
 
 }

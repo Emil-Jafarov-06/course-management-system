@@ -4,8 +4,10 @@ import com.example.finalprojectcoursemanagementsystem.exception.otherexceptions.
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.LessonNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.QuizNotFoundException;
 import com.example.finalprojectcoursemanagementsystem.exception.resourseexceptions.UserNotFoundException;
+import com.example.finalprojectcoursemanagementsystem.mappers.AttemptMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuestionMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.QuizMapper;
+import com.example.finalprojectcoursemanagementsystem.model.dto.AttemptDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuestionDTO;
 import com.example.finalprojectcoursemanagementsystem.model.dto.QuizDTO;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,6 +39,7 @@ public class QuizService {
     private final EmailService emailService;
     private final QuestionMapper questionMapper;
     private final QuizMapper quizMapper;
+    private final AttemptMapper attemptMapper;
 
     @Transactional
     public QuizDTO getQuiz(Long userId, Long quizId) {
@@ -126,6 +130,7 @@ public class QuizService {
         lessonProgress.setQuizStarted(null);
         Attempt attempt = new Attempt();
         attempt.setScore(correctness);
+        attempt.setDate(LocalDateTime.now());
         lessonProgress.addAttempt(attempt);
         lessonProgressRepository.save(lessonProgress);
 
@@ -208,5 +213,25 @@ public class QuizService {
         lessonRepository.save(lesson);
         quizRepository.delete(quiz);
         return String.format("Quiz with id %d deleted successfully!", quizId);
+    }
+
+    @Transactional
+    public List<AttemptDTO> getQuizAttempts(Long userId, Long quizId) {
+        CourseUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId + "!"));
+        Quiz quiz = quizRepository.findById(quizId)
+                .orElseThrow(() -> new QuizNotFoundException("Quiz not found with id " + quizId));
+        if (!userRepository.isCourseAlreadyPurchased(userId, quiz.getLesson().getCourse().getId())) {
+            throw new ForbiddenAccessException("You are not allowed to view attempts before starting the lesson!");
+        }
+        Lesson lesson = quiz.getLesson();
+        LessonProgress lessonProgress = lessonProgressRepository.findLessonProgressByCourseUser_IdAndLesson_Id(userId, lesson.getId());
+        if(lessonProgress.getProgress() == ProgressEnum.NOT_STARTED){
+            throw new ForbiddenAccessException("Cannot view quiz attempts before starting the lesson!");
+        }
+        List<Attempt> attempts = lessonProgress.getAttempts();
+        return attempts.stream()
+                .map(attemptMapper::mapIntoDTO)
+                .toList();
     }
 }

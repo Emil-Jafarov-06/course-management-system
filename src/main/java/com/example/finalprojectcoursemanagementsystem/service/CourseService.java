@@ -10,10 +10,7 @@ import com.example.finalprojectcoursemanagementsystem.mappers.CourseMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.LessonMapper;
 import com.example.finalprojectcoursemanagementsystem.mappers.UserMapper;
 import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
-import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.CourseRatingDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.*;
 import com.example.finalprojectcoursemanagementsystem.model.entity.*;
 import com.example.finalprojectcoursemanagementsystem.model.enums.ProgressEnum;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
@@ -259,5 +256,24 @@ public class CourseService {
         Long raterCount = courseRatingRepository.countCourseRatingsByCourse_Id(courseId);
         
         return new CourseRatingDTO(courseId, averageRating, raterCount);
+    }
+
+    public CourseProgressDTO getCourseProgress(Long userId, Long courseId) {
+        CourseUser user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id " + userId));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException("Course not found with id " + courseId));
+
+        if(!userRepository.isCourseAlreadyPurchased(userId, courseId)){
+            throw new ForbiddenAccessException("Only enrolled users can view lesson progress!");
+        }
+        CourseProgress courseProgress = courseProgressRepository.findCourseProgressByCourse_IdAndCourseUser_Id(courseId, userId);
+        CourseProgressDTO courseProgressDTO = new CourseProgressDTO();
+        courseProgressDTO.setId(courseProgress.getId());
+        courseProgressDTO.setProgress(courseProgress.getProgress());
+        courseProgressDTO.setCompletedUnits(courseProgress.getCompletedUnits());
+        courseProgressDTO.setTotalUnits(courseProgress.getTotalUnits());
+        courseProgressDTO.setCourseId(courseId);
+        return courseProgressDTO;
     }
 }

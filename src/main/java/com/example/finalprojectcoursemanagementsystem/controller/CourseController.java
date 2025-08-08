@@ -1,10 +1,8 @@
 package com.example.finalprojectcoursemanagementsystem.controller;
 
 import com.example.finalprojectcoursemanagementsystem.model.PageImplementation;
-import com.example.finalprojectcoursemanagementsystem.model.dto.CourseDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.CourseRatingDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.LessonDTO;
-import com.example.finalprojectcoursemanagementsystem.model.dto.UserDTO;
+import com.example.finalprojectcoursemanagementsystem.model.dto.*;
+import com.example.finalprojectcoursemanagementsystem.model.entity.CourseProgress;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseCreateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.request.CourseUpdateRequest;
 import com.example.finalprojectcoursemanagementsystem.model.response.InformationResponse;
@@ -160,4 +158,15 @@ public class CourseController {
                 messageSource.getMessage("course.rated", null, locale),
                 courseRatingDTO));
     }
+
+    @GetMapping("/{courseId}/progress")
+    public ResponseEntity<InformationResponse<CourseProgressDTO>> getCourseProgress(@PathVariable @Positive Long courseId,
+                                                                                    @RequestHeader(required = false) Locale locale){
+        SecurityUser securityUser = (SecurityUser) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CourseProgressDTO courseProgressDTO = courseService.getCourseProgress(securityUser.getCourseUser().getId(), courseId);
+        return ResponseEntity.ok(new InformationResponse<>(true,
+                messageSource.getMessage("course.progress", null, locale),
+                courseProgressDTO));
+    }
+
 }

@@ -3,6 +3,8 @@ package com.example.finalprojectcoursemanagementsystem.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Setter
 @Getter
@@ -16,6 +18,7 @@ public class Attempt {
     private Long id;
 
     private Double score;
+    private LocalDateTime date;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn

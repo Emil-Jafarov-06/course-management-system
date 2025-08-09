@@ -18,7 +18,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     @Query(value = """
     SELECT c FROM Course c\s
     LEFT JOIN c.ratings r\s
-    WHERE LOWER(c.description) LIKE LOWER(CONCAT('%', :courseDescription, '%'))\s
+    WHERE LOWER(c.description) LIKE LOWER(:courseDescription)\s
     AND c.available = true\s
     GROUP BY c.id\s
     ORDER BY AVG(r.rating) DESC
